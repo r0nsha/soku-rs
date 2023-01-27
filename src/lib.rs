@@ -1,4 +1,5 @@
 #![forbid(unsafe_code)]
+// TODO: #![forbid(missing_docs)]
 
 mod consts;
 mod error;

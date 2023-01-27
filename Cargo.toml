@@ -9,4 +9,5 @@ name = "soku"
 
 [dependencies]
 bit-set = "0.5.3"
+rand = "0.8.5"
 thiserror = "1.0.38"
