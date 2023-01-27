@@ -9,14 +9,3 @@ pub mod prelude {
     pub use crate::error::*;
     pub use crate::sudoku::*;
 }
-
-// TODO: Sudoku
-// TODO: Grid
-// TODO: Given
-// TODO: House
-// TODO: Box
-// TODO: Row
-// TODO: Column
-// TODO: Cell
-// TODO: Candidate
-// TODO: Digit

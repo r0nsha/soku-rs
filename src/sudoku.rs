@@ -1,13 +1,21 @@
 use std::{
     fmt::{Display, Write},
     ops::Deref,
+    slice::Chunks,
 };
 
-use crate::{consts::HOUSE_SIZE, error::SudokuError};
+use crate::{
+    consts::{GRID_SIZE, HOUSE_SIZE},
+    error::SudokuError,
+};
 
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
-pub struct Sudoku {
-    grid: Grid,
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Sudoku(pub(crate) [Cell; GRID_SIZE]);
+
+impl Default for Sudoku {
+    fn default() -> Self {
+        Self([Default::default(); GRID_SIZE])
+    }
 }
 
 impl Display for Sudoku {
@@ -16,7 +24,7 @@ impl Display for Sudoku {
 
         f.write_str(".-----.-----.-----.\n")?;
 
-        for (row_index, row) in self.grid.rows.iter().enumerate() {
+        for (row_index, row) in self.rows().enumerate() {
             f.write_char(PIPE)?;
 
             for (cell_index, cell) in row.iter().enumerate() {
@@ -31,7 +39,7 @@ impl Display for Sudoku {
 
             f.write_char('\n')?;
 
-            if row_index < self.grid.rows.len() - 1 && (row_index + 1) % 3 == 0 {
+            if row_index < HOUSE_SIZE - 1 && (row_index + 1) % 3 == 0 {
                 f.write_str(":----- ----- -----:\n")?;
             }
         }
@@ -50,11 +58,10 @@ impl Sudoku {
     pub fn filled() -> Self {
         todo!()
     }
-}
 
-#[derive(Debug, Default, PartialEq, Eq, Clone)]
-pub struct Grid {
-    rows: [[Cell; HOUSE_SIZE]; HOUSE_SIZE],
+    pub fn rows(&self) -> Chunks<'_, Cell> {
+        self.0.chunks(HOUSE_SIZE)
+    }
 }
 
 // #[derive(Debug,Default,PartialEq, Eq)]
@@ -62,18 +69,36 @@ pub struct Grid {
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub struct Cell {
-    digit: Option<Digit>,
-    // candidates: Candidates,
+    pub(crate) digit: Option<Digit>,
+    //pub(crate) candidates: Candidates,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
-pub struct Digit(u8);
+pub struct Digit(pub(crate) u8);
+
+impl Digit {
+    #[inline]
+    pub fn is_valid(value: u8) -> bool {
+        (1..=9).contains(&value)
+    }
+
+    #[inline]
+    pub fn new(value: u8) -> Result<Self, SudokuError> {
+        Self::try_from(value)
+    }
+
+    #[inline]
+    pub fn new_unchecked(value: u8) -> Self {
+        Self(value)
+    }
+}
 
 impl TryFrom<u8> for Digit {
     type Error = SudokuError;
 
+    #[inline]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if (1..=9).contains(&value) {
+        if Digit::is_valid(value) {
             Ok(Self(value))
         } else {
             Err(SudokuError::InvalidDigit(value))
