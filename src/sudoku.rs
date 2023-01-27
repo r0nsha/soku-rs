@@ -7,6 +7,7 @@ use std::{
 use crate::{
     consts::{GRID_SIZE, HOUSE_SIZE},
     error::SudokuError,
+    generate,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -56,7 +57,7 @@ impl Sudoku {
     }
 
     pub fn filled() -> Self {
-        todo!()
+        generate::latin_squares()
     }
 
     pub fn rows(&self) -> Chunks<'_, Cell> {

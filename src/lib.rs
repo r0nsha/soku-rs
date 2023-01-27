@@ -2,6 +2,7 @@
 
 mod consts;
 mod error;
+mod generate;
 mod sudoku;
 
 pub mod prelude {
