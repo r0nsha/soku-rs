@@ -8,4 +8,5 @@ repository = "https://github.com/r0nsha/soku-rs"
 name = "soku"
 
 [dependencies]
+bit-set = "0.5.3"
 thiserror = "1.0.38"
