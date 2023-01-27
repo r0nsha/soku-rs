@@ -1,8 +1,11 @@
 [package]
-name = "soku-rs"
+name = "soku"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/r0nsha/soku-rs"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "soku"
 
 [dependencies]
+thiserror = "1.0.38"
