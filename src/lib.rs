@@ -1,19 +1,13 @@
 #![forbid(unsafe_code)]
 
-mod candidates;
-mod cell;
 mod consts;
-mod digit;
 mod error;
-mod grid;
+mod sudoku;
 
 pub mod prelude {
-    pub use crate::candidates::*;
-    pub use crate::cell::*;
     pub use crate::consts::*;
-    pub use crate::digit::*;
     pub use crate::error::*;
-    pub use crate::grid::*;
+    pub use crate::sudoku::*;
 }
 
 // TODO: Sudoku

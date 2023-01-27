@@ -1,6 +1,7 @@
 use soku::prelude::*;
 
 fn main() -> Result<(), SudokuError> {
-    println!("Hello, world!");
+    let sudoku = Sudoku::new();
+    println!("{sudoku}");
     Ok(())
 }
