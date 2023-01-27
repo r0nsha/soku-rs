@@ -5,7 +5,7 @@ use std::{
 
 use crate::{consts::HOUSE_SIZE, error::SudokuError};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct Sudoku {
     grid: Grid,
 }
@@ -20,10 +20,20 @@ impl Display for Sudoku {
             f.write_char(PIPE)?;
 
             for (cell_index, cell) in row.iter().enumerate() {
-                f.write_char('.')?;
+                f.write_char(cell.digit.map_or('.', |d| *d as char))?;
+
+                if (cell_index + 1) % 3 == 0 {
+                    f.write_char(PIPE)?;
+                } else {
+                    f.write_char(' ')?;
+                }
             }
 
-            f.write_char(PIPE)?;
+            f.write_char('\n')?;
+
+            if row_index < self.grid.rows.len() - 1 && (row_index + 1) % 3 == 0 {
+                f.write_str(":----- ----- -----:\n")?;
+            }
         }
 
         f.write_str("'-----'-----'-----'")?;
@@ -38,7 +48,7 @@ impl Sudoku {
     }
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct Grid {
     rows: [[Cell; HOUSE_SIZE]; HOUSE_SIZE],
 }
@@ -46,13 +56,13 @@ pub struct Grid {
 // #[derive(Debug,Default,PartialEq, Eq)]
 // pub struct Candidates(BitSet<u8>);
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub struct Cell {
     digit: Option<Digit>,
     // candidates: Candidates,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub struct Digit(u8);
 
 impl TryFrom<u8> for Digit {
