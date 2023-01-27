@@ -2,6 +2,7 @@ use std::ops::Deref;
 
 use crate::error::SudokuError;
 
+#[derive(Debug)]
 pub struct Digit(u8);
 
 impl TryFrom<u8> for Digit {

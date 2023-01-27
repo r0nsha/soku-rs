@@ -1,1 +1,1 @@
-pub const HOUSE_SIZE: u8 = 9;
+pub const HOUSE_SIZE: usize = 9;
