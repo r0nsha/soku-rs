@@ -10,9 +10,39 @@ use crate::{
 
 pub(crate) fn latin_squares() -> Sudoku {
     // We follow the algorithm from this paper
-    let squares = std::iter::repeat_with(LatinSquare::new)
+    let mut squares = std::iter::repeat_with(LatinSquare::new)
         .take(9)
         .collect::<Vec<_>>();
+
+    let big_square = LatinSquare::new();
+
+    let mut x = 0;
+    let mut y = 0;
+
+    for (square_index, square) in squares.iter_mut().enumerate() {
+        println!("{square}");
+
+        let big_square_value = big_square[x][y] * 10;
+
+        for row in square.iter_mut() {
+            for digit in row.iter_mut() {
+                // pair the digit with the big_square value
+                let paired = *digit + big_square_value;
+
+                // convert from base 3 to base 10
+                let base_10 = { todo!() };
+            }
+        }
+
+        println!("{square}");
+
+        if y == 2 {
+            y = 0;
+            x += 1;
+        } else {
+            y += 1;
+        }
+    }
 
     todo!()
 }
