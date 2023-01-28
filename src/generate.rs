@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use derive_more::{Deref, DerefMut};
-use rand::{seq::SliceRandom, thread_rng, Rng};
+use rand::{seq::SliceRandom, thread_rng};
 
 use crate::{
     consts::{BOX_SIZE, HOUSE_SIZE},
@@ -9,7 +9,11 @@ use crate::{
 };
 
 pub(crate) fn latin_squares() -> Sudoku {
-    println!("{}\n", LatinSquare::new());
+    // We follow the algorithm from this paper
+    let squares = std::iter::repeat_with(LatinSquare::new)
+        .take(9)
+        .collect::<Vec<_>>();
+
     todo!()
 }
 
