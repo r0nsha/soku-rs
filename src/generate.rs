@@ -38,8 +38,8 @@ impl LatinSquare {
 
         // Initialize square
         for row in square.iter_mut() {
-            for (index, cell) in row.iter_mut().enumerate() {
-                *cell = index as u8;
+            for (i, cell) in row.iter_mut().enumerate() {
+                *cell = i as u8;
             }
         }
 
@@ -71,9 +71,9 @@ impl LatinSquare {
                 used[square[i][j] as usize] = true;
             }
 
-            for (index, used) in used.iter().enumerate() {
+            for (i, used) in used.iter().enumerate() {
                 if !used {
-                    square[size - 1][j] = index as u8;
+                    square[size - 1][j] = i as u8;
                     break;
                 }
             }
