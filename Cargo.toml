@@ -9,5 +9,6 @@ name = "soku"
 
 [dependencies]
 bit-set = "0.5.3"
+derive_more = "0.99.17"
 rand = "0.8.5"
 thiserror = "1.0.38"

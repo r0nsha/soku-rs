@@ -4,6 +4,8 @@ use std::{
     slice::Chunks,
 };
 
+use derive_more::Deref;
+
 use crate::{
     consts::{GRID_SIZE, HOUSE_SIZE},
     error::SudokuError,
@@ -74,7 +76,7 @@ pub struct Cell {
     //pub(crate) candidates: Candidates,
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Default, Deref, PartialEq, Eq, Clone, Copy)]
 pub struct Digit(pub(crate) u8);
 
 impl Digit {
@@ -107,10 +109,3 @@ impl TryFrom<u8> for Digit {
     }
 }
 
-impl Deref for Digit {
-    type Target = u8;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
