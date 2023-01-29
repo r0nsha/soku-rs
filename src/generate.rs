@@ -5,7 +5,7 @@ use rand::{seq::SliceRandom, thread_rng};
 
 use crate::{
     consts::SQUARE_SIZE,
-    sudoku::{Digit, Sudoku},
+    sudoku::{Coord, Digit, Sudoku},
 };
 
 pub(crate) fn latin_squares() -> Sudoku {
@@ -65,8 +65,7 @@ pub(crate) fn latin_squares() -> Sudoku {
 
     for (idx, latin_square) in squares.iter().enumerate() {
         for (cell_idx, cell) in sudoku.square_mut_by_index(idx).enumerate() {
-            let row = cell_idx / SQUARE_SIZE;
-            let col = cell_idx % SQUARE_SIZE;
+            let Coord(row, col) = Coord::from_index(cell_idx, SQUARE_SIZE);
 
             let latin_square_digit = latin_square[row][col];
             let digit = Digit::new_unchecked(latin_square_digit);
@@ -77,12 +76,8 @@ pub(crate) fn latin_squares() -> Sudoku {
 
     println!("{sudoku}");
 
-    for cell in sudoku.square_mut_by_index(0) {
-        println!("{}", cell.digit.unwrap());
-    }
-
     // TODO: Check that sudoku isn't valid
-    // dbg!(sudoku.is_valid());
+    dbg!(sudoku.is_valid());
 
     // TODO: Swap the 2nd & 4th rows
     // TODO: Swap the 3rd & 7th rows

@@ -1,9 +1,11 @@
 use std::{
     fmt::{Display, Write},
+    hash::Hash,
     slice::Chunks,
 };
 
 use derive_more::{Deref, Display};
+use itertools::Itertools;
 
 use crate::{
     consts::{GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE},
@@ -75,16 +77,51 @@ impl Sudoku {
         self.0.get_mut(coord.as_index())
     }
 
+    pub fn row(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
+        Self::validate_house_index(idx);
+        self.0.iter().skip(idx * HOUSE_SIZE).take(HOUSE_SIZE)
+    }
+
+    pub fn row_mut(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
+        Self::validate_house_index(idx);
+        self.0.iter_mut().skip(idx * HOUSE_SIZE).take(HOUSE_SIZE)
+    }
+
     pub fn rows(&self) -> Chunks<'_, Cell> {
         self.0.chunks(HOUSE_SIZE)
     }
 
+    pub fn col(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
+        Self::validate_house_index(idx);
+        self.0
+            .iter()
+            .enumerate()
+            .filter_map(move |(cell_idx, cell)| {
+                if Coord::from_index(cell_idx, HOUSE_SIZE).col() == idx {
+                    Some(cell)
+                } else {
+                    None
+                }
+            })
+    }
+
+    pub fn col_mut(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
+        Self::validate_house_index(idx);
+        self.0
+            .iter_mut()
+            .enumerate()
+            .filter_map(move |(cell_idx, cell)| {
+                if Coord::from_index(cell_idx, HOUSE_SIZE).col() == idx {
+                    Some(cell)
+                } else {
+                    None
+                }
+            })
+    }
+
     pub fn square_by_index(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
         Self::validate_house_index(idx);
-
-        let row = idx / SQUARE_SIZE;
-        let col = idx % SQUARE_SIZE;
-
+        let Coord(row, col) = Coord::from_index(idx, SQUARE_SIZE);
         self.square(row, col)
     }
 
@@ -102,10 +139,7 @@ impl Sudoku {
 
     pub fn square_mut_by_index(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
         Self::validate_house_index(idx);
-
-        let row = idx / SQUARE_SIZE;
-        let col = idx % SQUARE_SIZE;
-
+        let Coord(row, col) = Coord::from_index(idx, SQUARE_SIZE);
         self.square_mut(row, col)
     }
 
@@ -145,7 +179,32 @@ impl Sudoku {
         ]
     }
 
-    // pub fn is_valid(&self) -> bool {}
+    pub fn is_valid(&self) -> bool {
+        for row in self.rows() {
+            if !row.iter().all_unique() {
+                return false;
+            }
+        }
+
+        self.col(4).for_each(|x| {
+            if let Some(d) = &x.digit {
+                println!("{d}");
+            }
+        });
+        // for col in self.cols() {
+        //     if !col.iter().all_unique() {
+        //         return false;
+        //     }
+        // }
+
+        for mut square in (0..HOUSE_SIZE).map(|i| self.square_by_index(i)) {
+            if !square.all_unique() {
+                return false;
+            }
+        }
+
+        true
+    }
 
     #[inline]
     fn validate_house_index(idx: usize) {
@@ -161,13 +220,13 @@ impl Sudoku {
 // #[derive(Debug,Default,PartialEq, Eq)]
 // pub struct Candidates(BitSet<u8>);
 
-#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Cell {
     pub(crate) digit: Option<Digit>,
     //pub(crate) candidates: Candidates,
 }
 
-#[derive(Debug, Display, Default, Deref, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Display, Default, Deref, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Digit(pub(crate) u8);
 
 impl Digit {
@@ -204,6 +263,11 @@ impl TryFrom<u8> for Digit {
 pub struct Coord(pub usize, pub usize);
 
 impl Coord {
+    #[inline]
+    pub fn from_index(index: usize, size: usize) -> Self {
+        Self(index / size, index % size)
+    }
+
     #[inline]
     pub fn as_index(&self) -> usize {
         (self.0 * HOUSE_SIZE) + self.1
