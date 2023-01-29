@@ -13,7 +13,6 @@ use crate::{
 
 pub type House<'a> = [&'a Cell; HOUSE_SIZE];
 pub type HouseMut<'a> = [&'a mut Cell; HOUSE_SIZE];
-pub type HouseCoords = [Coord; HOUSE_SIZE];
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Sudoku(pub(crate) [Cell; GRID_SIZE]);
@@ -30,16 +29,16 @@ impl Display for Sudoku {
 
         f.write_str(".-----.-----.-----.\n")?;
 
-        for (row_index, row) in self.rows().enumerate() {
+        for (row_idx, row) in self.rows().enumerate() {
             f.write_char(PIPE)?;
 
-            for (cell_index, cell) in row.iter().enumerate() {
+            for (cell_idx, cell) in row.iter().enumerate() {
                 match &cell.digit {
                     Some(digit) => write!(f, "{}", *digit)?,
                     None => f.write_char('.')?,
                 }
 
-                if (cell_index + 1) % 3 == 0 {
+                if (cell_idx + 1) % SQUARE_SIZE == 0 {
                     f.write_char(PIPE)?;
                 } else {
                     f.write_char(' ')?;
@@ -48,7 +47,7 @@ impl Display for Sudoku {
 
             f.write_char('\n')?;
 
-            if row_index < HOUSE_SIZE - 1 && (row_index + 1) % 3 == 0 {
+            if row_idx < HOUSE_SIZE - 1 && (row_idx + 1) % SQUARE_SIZE == 0 {
                 f.write_str(":----- ----- -----:\n")?;
             }
         }
@@ -60,11 +59,11 @@ impl Display for Sudoku {
 }
 
 impl Sudoku {
-    pub fn empty() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn filled() -> Self {
+    pub fn new_filled() -> Self {
         generate::latin_squares()
     }
 
@@ -80,70 +79,84 @@ impl Sudoku {
         self.0.chunks(HOUSE_SIZE)
     }
 
-    pub fn square_coords(&self, row: usize, col: usize) -> Option<HouseCoords> {
-        if !Self::is_valid_pos(row, col) {
-            return None;
-        }
+    pub fn square_by_index(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
+        Self::validate_house_index(idx);
 
-        let mut square = HouseCoords::default();
-        let row = row * SQUARE_SIZE;
-        let col = col * SQUARE_SIZE;
+        let row = idx / SQUARE_SIZE;
+        let col = idx % SQUARE_SIZE;
 
-        for (square_index, coord) in square.iter_mut().enumerate() {
-            let row_offset = square_index / SQUARE_SIZE;
-            let col_offset = square_index % SQUARE_SIZE;
-            *coord = Coord(row + row_offset, col + col_offset);
-        }
-
-        Some(square)
+        self.square(row, col)
     }
 
-    pub fn square(&self, row: usize, col: usize) -> Option<House<'_>> {
-        self.square_coords(row, col)
-            .map(|coords| coords.map(|coord| self.cell(coord).unwrap()))
+    pub fn square(&self, row: usize, col: usize) -> impl Iterator<Item = &'_ Cell> {
+        let square_indices = Self::square_indices(row, col);
+
+        self.0.iter().enumerate().filter_map(move |(index, cell)| {
+            if square_indices.contains(&index) {
+                Some(cell)
+            } else {
+                None
+            }
+        })
     }
 
-    pub fn squares(&self) -> Squares<'_> {
-        Squares {
-            sudoku: self,
-            row: 0,
-            col: 0,
+    pub fn square_mut_by_index(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
+        Self::validate_house_index(idx);
+
+        let row = idx / SQUARE_SIZE;
+        let col = idx % SQUARE_SIZE;
+
+        self.square_mut(row, col)
+    }
+
+    pub fn square_mut(&mut self, row: usize, col: usize) -> impl Iterator<Item = &'_ mut Cell> {
+        let square_indices = Self::square_indices(row, col);
+
+        self.0
+            .iter_mut()
+            .enumerate()
+            .filter_map(move |(index, cell)| {
+                if square_indices.contains(&index) {
+                    Some(cell)
+                } else {
+                    None
+                }
+            })
+    }
+
+    fn square_indices(row: usize, col: usize) -> [usize; HOUSE_SIZE] {
+        let square_row = row * HOUSE_SIZE * SQUARE_SIZE;
+        let square_col = col * SQUARE_SIZE;
+
+        let square_index = square_row + square_col;
+
+        [
+            square_index,
+            square_index + 1,
+            square_index + 2,
+            //
+            square_index + HOUSE_SIZE,
+            square_index + HOUSE_SIZE + 1,
+            square_index + HOUSE_SIZE + 2,
+            //
+            square_index + HOUSE_SIZE * 2,
+            square_index + HOUSE_SIZE * 2 + 1,
+            square_index + HOUSE_SIZE * 2 + 2,
+        ]
+    }
+
+    // pub fn is_valid(&self) -> bool {}
+
+    #[inline]
+    fn validate_house_index(idx: usize) {
+        if idx >= HOUSE_SIZE {
+            panic!(
+                "house index must be between 0 and {}, got {idx} instead",
+                HOUSE_SIZE - 1
+            );
         }
-    }
-
-    fn is_valid_pos(row: usize, col: usize) -> bool {
-        row < SQUARE_SIZE && col < SQUARE_SIZE
     }
 }
-
-pub struct Squares<'a> {
-    sudoku: &'a Sudoku,
-    row: usize,
-    col: usize,
-}
-
-impl<'a> Iterator for Squares<'a> {
-    type Item = House<'a>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.row >= HOUSE_SIZE {
-            return None;
-        }
-
-        let square = self.sudoku.square(self.row, self.col).unwrap();
-
-        if self.col == SQUARE_SIZE - 1 {
-            self.row += 1;
-            self.col = 0;
-        } else {
-            self.col += 1;
-        }
-
-        Some(square)
-    }
-}
-
-// TODO: is there a safe way to implement SquaresMut?
 
 // #[derive(Debug,Default,PartialEq, Eq)]
 // pub struct Candidates(BitSet<u8>);

@@ -4,7 +4,7 @@ use derive_more::{Deref, DerefMut};
 use rand::{seq::SliceRandom, thread_rng};
 
 use crate::{
-    consts::{HOUSE_SIZE, SQUARE_SIZE},
+    consts::SQUARE_SIZE,
     sudoku::{Digit, Sudoku},
 };
 
@@ -61,30 +61,28 @@ pub(crate) fn latin_squares() -> Sudoku {
     }
 
     // Fill a sudoku board with the generated squares
-    let mut sudoku = Sudoku::empty();
-    let mut row = 0;
-    let mut col = 0;
+    let mut sudoku = Sudoku::new();
 
-    while row < SQUARE_SIZE {
-        let latin_square = &squares[((row * SQUARE_SIZE) + col)];
-        let square_coords = sudoku.square_coords(row, col).unwrap();
+    for (idx, latin_square) in squares.iter().enumerate() {
+        for (cell_idx, cell) in sudoku.square_mut_by_index(idx).enumerate() {
+            let row = cell_idx / SQUARE_SIZE;
+            let col = cell_idx % SQUARE_SIZE;
 
-        for coord in square_coords {
-            let latin_square_digit =
-                latin_square[coord.row() % SQUARE_SIZE][coord.col() % SQUARE_SIZE];
+            let latin_square_digit = latin_square[row][col];
             let digit = Digit::new_unchecked(latin_square_digit);
-            sudoku.cell_mut(coord).unwrap().digit = Some(digit);
-        }
 
-        if col == SQUARE_SIZE - 1 {
-            row += 1;
-            col = 0;
-        } else {
-            col += 1;
+            cell.digit = Some(digit);
         }
     }
 
+    println!("{sudoku}");
+
+    for cell in sudoku.square_mut_by_index(0) {
+        println!("{}", cell.digit.unwrap());
+    }
+
     // TODO: Check that sudoku isn't valid
+    // dbg!(sudoku.is_valid());
 
     // TODO: Swap the 2nd & 4th rows
     // TODO: Swap the 3rd & 7th rows
