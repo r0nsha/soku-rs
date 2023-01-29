@@ -89,9 +89,7 @@ pub(crate) fn latin_squares() -> Sudoku {
     swap_rows(&mut sudoku, 2, 6);
     swap_rows(&mut sudoku, 5, 7);
 
-    println!("{sudoku}");
-
-    todo!()
+    sudoku
 }
 
 #[derive(Debug, Default, Deref, DerefMut)]
