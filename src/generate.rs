@@ -4,18 +4,22 @@ use derive_more::{Deref, DerefMut};
 use rand::{seq::SliceRandom, thread_rng};
 
 use crate::{
-    consts::{BOX_SIZE, HOUSE_SIZE},
+    consts::{SQUARE_SIZE, HOUSE_SIZE},
     sudoku::Sudoku,
 };
 
 pub(crate) fn latin_squares() -> Sudoku {
-    // We follow the algorithm from this paper
+    // We follow the algorithm from this paper: https://sites.math.washington.edu/~morrow/mcm/team2280.pdf
+    // Select nine 3x3 random latin squares
     let mut squares = std::iter::repeat_with(LatinSquare::new)
         .take(9)
         .collect::<Vec<_>>();
 
+    // Create another latin square, which corresponds to each square in the previous vec
     let big_square = LatinSquare::new();
 
+    // For each digit in each square, pair it with the digit of the corresponding big_square digit.
+    // Treat this paired number as base 3 and convert to base 10, adding 1
     let mut x = 0;
     let mut y = 0;
 
@@ -33,9 +37,7 @@ pub(crate) fn latin_squares() -> Sudoku {
         result
     }
 
-    for (square_index, square) in squares.iter_mut().enumerate() {
-        println!("{square}");
-
+    for square in squares.iter_mut() {
         let big_square_value = big_square[x][y] * 10;
 
         for row in square.iter_mut() {
@@ -46,14 +48,9 @@ pub(crate) fn latin_squares() -> Sudoku {
                 // convert the paired numbers from base 3 to base 10
                 let base_10 = convert_base_3_to_10(paired);
 
-
                 *digit = base_10 + 1;
-
-                println!("paired={paired}, digit={digit}");
             }
         }
-
-        println!("{square}");
 
         if y == 2 {
             y = 0;
@@ -63,11 +60,17 @@ pub(crate) fn latin_squares() -> Sudoku {
         }
     }
 
-    todo!()
-}
+    // TODO: Create a sudoku from the provided squares
+    // TODO: Swap the 2nd & 4th rows
+    // TODO: Swap the 3rd & 7th rows
+    // TODO: Swap the 6th & 8th rows
+    // TODO: Check that the sudoku board is valid (sudoku.is_valid()) 
+  
+    todo!()  
+}  
 
 #[derive(Debug, Default, Deref, DerefMut)]
-struct LatinSquare([[u8; BOX_SIZE]; BOX_SIZE]);
+struct LatinSquare([[u8; SQUARE_SIZE]; SQUARE_SIZE]);
 
 impl Display for LatinSquare {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -118,7 +121,7 @@ impl LatinSquare {
 
         // Last row
         for j in 0..size {
-            let mut used = [false; BOX_SIZE];
+            let mut used = [false; SQUARE_SIZE];
 
             for i in 0..size - 1 {
                 used[square[i][j] as usize] = true;
