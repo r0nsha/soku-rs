@@ -69,10 +69,12 @@ impl Sudoku {
         generate::latin_squares()
     }
 
+    #[inline]
     pub fn cell(&self, coord: Coord) -> Option<&Cell> {
         self.0.get(coord.as_index())
     }
 
+    #[inline]
     pub fn cell_mut(&mut self, coord: Coord) -> Option<&mut Cell> {
         self.0.get_mut(coord.as_index())
     }
@@ -119,14 +121,21 @@ impl Sudoku {
             })
     }
 
-    pub fn square_by_index(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
-        Self::validate_house_index(idx);
-        let Coord(row, col) = Coord::from_index(idx, SQUARE_SIZE);
-        self.square(row, col)
+    pub fn cols(&self) -> Vec<impl Iterator<Item = &'_ Cell>> {
+        (0..HOUSE_SIZE)
+            .collect::<Vec<usize>>()
+            .iter()
+            .map(|&i| self.col(i))
+            .collect()
     }
 
-    pub fn square(&self, row: usize, col: usize) -> impl Iterator<Item = &'_ Cell> {
-        let square_indices = Self::square_indices(row, col);
+    pub fn square_by_index(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
+        Self::validate_house_index(idx);
+        self.square(Coord::from_index(idx, SQUARE_SIZE))
+    }
+
+    pub fn square(&self, coord: Coord) -> impl Iterator<Item = &'_ Cell> {
+        let square_indices = Self::square_indices(coord);
 
         self.0.iter().enumerate().filter_map(move |(index, cell)| {
             if square_indices.contains(&index) {
@@ -139,12 +148,11 @@ impl Sudoku {
 
     pub fn square_mut_by_index(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
         Self::validate_house_index(idx);
-        let Coord(row, col) = Coord::from_index(idx, SQUARE_SIZE);
-        self.square_mut(row, col)
+        self.square_mut(Coord::from_index(idx, SQUARE_SIZE))
     }
 
-    pub fn square_mut(&mut self, row: usize, col: usize) -> impl Iterator<Item = &'_ mut Cell> {
-        let square_indices = Self::square_indices(row, col);
+    pub fn square_mut(&mut self, coord: Coord) -> impl Iterator<Item = &'_ mut Cell> {
+        let square_indices = Self::square_indices(coord);
 
         self.0
             .iter_mut()
@@ -158,7 +166,7 @@ impl Sudoku {
             })
     }
 
-    fn square_indices(row: usize, col: usize) -> [usize; HOUSE_SIZE] {
+    fn square_indices(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
         let square_row = row * HOUSE_SIZE * SQUARE_SIZE;
         let square_col = col * SQUARE_SIZE;
 
@@ -186,16 +194,11 @@ impl Sudoku {
             }
         }
 
-        self.col(4).for_each(|x| {
-            if let Some(d) = &x.digit {
-                println!("{d}");
+        for mut col in self.cols() {
+            if !col.all_unique() {
+                return false;
             }
-        });
-        // for col in self.cols() {
-        //     if !col.iter().all_unique() {
-        //         return false;
-        //     }
-        // }
+        }
 
         for mut square in (0..HOUSE_SIZE).map(|i| self.square_by_index(i)) {
             if !square.all_unique() {

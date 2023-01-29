@@ -4,7 +4,7 @@ use derive_more::{Deref, DerefMut};
 use rand::{seq::SliceRandom, thread_rng};
 
 use crate::{
-    consts::SQUARE_SIZE,
+    consts::{HOUSE_SIZE, SQUARE_SIZE},
     sudoku::{Coord, Digit, Sudoku},
 };
 
@@ -74,15 +74,22 @@ pub(crate) fn latin_squares() -> Sudoku {
         }
     }
 
+    fn swap_rows(sudoku: &mut Sudoku, r1: usize, r2: usize) {
+        for col in 0..HOUSE_SIZE {
+            let r1_coord = Coord(r1, col);
+            let r2_coord = Coord(r2, col);
+
+            let temp_digit = sudoku.cell(r1_coord).unwrap().digit;
+            sudoku.cell_mut(r1_coord).unwrap().digit = sudoku.cell(r2_coord).unwrap().digit;
+            sudoku.cell_mut(r2_coord).unwrap().digit = temp_digit;
+        }
+    }
+
+    swap_rows(&mut sudoku, 1, 3);
+    swap_rows(&mut sudoku, 2, 6);
+    swap_rows(&mut sudoku, 5, 7);
+
     println!("{sudoku}");
-
-    // TODO: Check that sudoku isn't valid
-    dbg!(sudoku.is_valid());
-
-    // TODO: Swap the 2nd & 4th rows
-    // TODO: Swap the 3rd & 7th rows
-    // TODO: Swap the 6th & 8th rows
-    // TODO: Check that the sudoku board is valid (sudoku.is_valid())
 
     todo!()
 }
