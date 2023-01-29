@@ -7,7 +7,7 @@ use std::{
 use derive_more::Deref;
 
 use crate::{
-    consts::{GRID_SIZE, HOUSE_SIZE},
+    consts::{GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE},
     error::SudokuError,
     generate,
 };
@@ -65,6 +65,74 @@ impl Sudoku {
     pub fn rows(&self) -> Chunks<'_, Cell> {
         self.0.chunks(HOUSE_SIZE)
     }
+
+    pub fn squares(&self) -> Squares<'_> {
+        Squares {
+            sudoku: self,
+            index: 0,
+        }
+    }
+}
+
+pub struct Squares<'a> {
+    sudoku: &'a Sudoku,
+    index: usize,
+}
+
+impl<'a> Iterator for Squares<'a> {
+    type Item = [&'a Cell; HOUSE_SIZE];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if (self.index + HOUSE_SIZE * 2) >= self.sudoku.0.len() {
+            return None;
+        }
+
+        let mut square: Self::Item = [&self.sudoku.0[0]; HOUSE_SIZE];
+        let mut square_index = 0;
+        let mut sudoku_index = self.index;
+
+        for _ in 0..SQUARE_SIZE {
+            println!(
+                "square index: {square_index}, sudoku: {},{}",
+                sudoku_index / HOUSE_SIZE,
+                sudoku_index % HOUSE_SIZE,
+            );
+            square[square_index] = &self.sudoku.0[sudoku_index];
+            square_index += 1;
+            sudoku_index += 1;
+        }
+
+        sudoku_index += HOUSE_SIZE;
+
+        for _ in 0..SQUARE_SIZE {
+            square[square_index] = &self.sudoku.0[sudoku_index];
+            square_index += 1;
+            sudoku_index += 1;
+        }
+
+        sudoku_index += HOUSE_SIZE;
+
+        for _ in 0..SQUARE_SIZE {
+            square[square_index] = &self.sudoku.0[sudoku_index];
+            square_index += 1;
+            sudoku_index += 1;
+        }
+
+        if self.index % HOUSE_SIZE == 0 {
+            self.index += HOUSE_SIZE * 2;
+        } else {
+            self.index += SQUARE_SIZE;
+        }
+
+        Some(square)
+
+        // 0, 1, 2
+        // 9, 10, 11
+        //
+        // 3, 4, 5
+        //
+        // 6, 7, 8
+    }
 }
 
 // #[derive(Debug,Default,PartialEq, Eq)]
@@ -108,4 +176,3 @@ impl TryFrom<u8> for Digit {
         }
     }
 }
-

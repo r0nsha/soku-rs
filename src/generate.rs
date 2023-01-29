@@ -4,7 +4,7 @@ use derive_more::{Deref, DerefMut};
 use rand::{seq::SliceRandom, thread_rng};
 
 use crate::{
-    consts::{SQUARE_SIZE, HOUSE_SIZE},
+    consts::{HOUSE_SIZE, SQUARE_SIZE},
     sudoku::Sudoku,
 };
 
@@ -61,13 +61,28 @@ pub(crate) fn latin_squares() -> Sudoku {
     }
 
     // TODO: Create a sudoku from the provided squares
+    let mut sudoku = Sudoku::default();
+
+    for sudoku_square in sudoku.squares() {}
+
+    // let mut x = 0;
+    // let mut y = 0;
+
+    // for square in squares {
+    //     for row in *square {
+    //         for digit in row {
+
+    //         }
+    //     }
+    // }
+
     // TODO: Swap the 2nd & 4th rows
     // TODO: Swap the 3rd & 7th rows
     // TODO: Swap the 6th & 8th rows
-    // TODO: Check that the sudoku board is valid (sudoku.is_valid()) 
-  
-    todo!()  
-}  
+    // TODO: Check that the sudoku board is valid (sudoku.is_valid())
+
+    todo!()
+}
 
 #[derive(Debug, Default, Deref, DerefMut)]
 struct LatinSquare([[u8; SQUARE_SIZE]; SQUARE_SIZE]);
