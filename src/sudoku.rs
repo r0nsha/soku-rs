@@ -1,6 +1,5 @@
 use std::{
     fmt::{Display, Write},
-    ops::Deref,
     slice::Chunks,
 };
 
@@ -11,6 +10,10 @@ use crate::{
     error::SudokuError,
     generate,
 };
+
+pub type House<'a> = [&'a Cell; HOUSE_SIZE];
+pub type HouseMut<'a> = [&'a mut Cell; HOUSE_SIZE];
+pub type HouseCoords = [Coord; HOUSE_SIZE];
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Sudoku(pub(crate) [Cell; GRID_SIZE]);
@@ -62,78 +65,82 @@ impl Sudoku {
         generate::latin_squares()
     }
 
+    pub fn cell(&self, coord: Coord) -> Option<&Cell> {
+        self.0.get(coord.as_index())
+    }
+
+    pub fn cell_mut(&mut self, coord: Coord) -> Option<&mut Cell> {
+        self.0.get_mut(coord.as_index())
+    }
+
     pub fn rows(&self) -> Chunks<'_, Cell> {
         self.0.chunks(HOUSE_SIZE)
+    }
+
+    pub fn square_coords(&self, row: usize, col: usize) -> Option<HouseCoords> {
+        if Self::is_valid_pos(row, col) {
+            return None;
+        }
+
+        let mut square = HouseCoords::default();
+        let row = row * SQUARE_SIZE;
+        let col = col * SQUARE_SIZE;
+
+        for (square_index, coord) in square.iter_mut().enumerate() {
+            let row_offset = square_index / SQUARE_SIZE;
+            let col_offset = square_index % SQUARE_SIZE;
+            *coord = Coord(row + row_offset, col + col_offset);
+        }
+
+        Some(square)
+    }
+
+    pub fn square(&self, row: usize, col: usize) -> Option<House<'_>> {
+        self.square_coords(row, col)
+            .map(|coords| coords.map(|coord| self.cell(coord).unwrap()))
     }
 
     pub fn squares(&self) -> Squares<'_> {
         Squares {
             sudoku: self,
-            index: 0,
+            row: 0,
+            col: 0,
         }
+    }
+
+    fn is_valid_pos(row: usize, col: usize) -> bool {
+        row > 0 && row < SQUARE_SIZE && col > 0 && col < SQUARE_SIZE
     }
 }
 
 pub struct Squares<'a> {
     sudoku: &'a Sudoku,
-    index: usize,
+    row: usize,
+    col: usize,
 }
 
 impl<'a> Iterator for Squares<'a> {
-    type Item = [&'a Cell; HOUSE_SIZE];
+    type Item = House<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if (self.index + HOUSE_SIZE * 2) >= self.sudoku.0.len() {
+        if self.row >= HOUSE_SIZE {
             return None;
         }
 
-        let mut square: Self::Item = [&self.sudoku.0[0]; HOUSE_SIZE];
-        let mut square_index = 0;
-        let mut sudoku_index = self.index;
+        let square = self.sudoku.square(self.row, self.col).unwrap();
 
-        for _ in 0..SQUARE_SIZE {
-            println!(
-                "square index: {square_index}, sudoku: {},{}",
-                sudoku_index / HOUSE_SIZE,
-                sudoku_index % HOUSE_SIZE,
-            );
-            square[square_index] = &self.sudoku.0[sudoku_index];
-            square_index += 1;
-            sudoku_index += 1;
-        }
-
-        sudoku_index += HOUSE_SIZE;
-
-        for _ in 0..SQUARE_SIZE {
-            square[square_index] = &self.sudoku.0[sudoku_index];
-            square_index += 1;
-            sudoku_index += 1;
-        }
-
-        sudoku_index += HOUSE_SIZE;
-
-        for _ in 0..SQUARE_SIZE {
-            square[square_index] = &self.sudoku.0[sudoku_index];
-            square_index += 1;
-            sudoku_index += 1;
-        }
-
-        if self.index % HOUSE_SIZE == 0 {
-            self.index += HOUSE_SIZE * 2;
+        if self.col == SQUARE_SIZE - 1 {
+            self.row += 1;
+            self.col = 0;
         } else {
-            self.index += SQUARE_SIZE;
+            self.col += 1;
         }
 
         Some(square)
-
-        // 0, 1, 2
-        // 9, 10, 11
-        //
-        // 3, 4, 5
-        //
-        // 6, 7, 8
     }
 }
+
+// TODO: is there a safe way to implement SquaresMut?
 
 // #[derive(Debug,Default,PartialEq, Eq)]
 // pub struct Candidates(BitSet<u8>);
@@ -174,5 +181,25 @@ impl TryFrom<u8> for Digit {
         } else {
             Err(SudokuError::InvalidDigit(value))
         }
+    }
+}
+
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+pub struct Coord(pub usize, pub usize);
+
+impl Coord {
+    #[inline]
+    pub fn as_index(&self) -> usize {
+        (self.0 * HOUSE_SIZE) + self.1
+    }
+
+    #[inline]
+    pub fn row(&self) -> usize {
+        self.0
+    }
+
+    #[inline]
+    pub fn col(&self) -> usize {
+        self.1
     }
 }
