@@ -3,7 +3,7 @@ use std::{
     slice::Chunks,
 };
 
-use derive_more::Deref;
+use derive_more::{Deref, Display};
 
 use crate::{
     consts::{GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE},
@@ -34,7 +34,10 @@ impl Display for Sudoku {
             f.write_char(PIPE)?;
 
             for (cell_index, cell) in row.iter().enumerate() {
-                f.write_char(cell.digit.map_or('.', |d| *d as char))?;
+                match &cell.digit {
+                    Some(digit) => write!(f, "{}", *digit)?,
+                    None => f.write_char('.')?,
+                }
 
                 if (cell_index + 1) % 3 == 0 {
                     f.write_char(PIPE)?;
@@ -78,7 +81,7 @@ impl Sudoku {
     }
 
     pub fn square_coords(&self, row: usize, col: usize) -> Option<HouseCoords> {
-        if Self::is_valid_pos(row, col) {
+        if !Self::is_valid_pos(row, col) {
             return None;
         }
 
@@ -109,7 +112,7 @@ impl Sudoku {
     }
 
     fn is_valid_pos(row: usize, col: usize) -> bool {
-        row > 0 && row < SQUARE_SIZE && col > 0 && col < SQUARE_SIZE
+        row < SQUARE_SIZE && col < SQUARE_SIZE
     }
 }
 
@@ -151,7 +154,7 @@ pub struct Cell {
     //pub(crate) candidates: Candidates,
 }
 
-#[derive(Debug, Default, Deref, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Display, Default, Deref, PartialEq, Eq, Clone, Copy)]
 pub struct Digit(pub(crate) u8);
 
 impl Digit {

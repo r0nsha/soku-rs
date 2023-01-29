@@ -20,8 +20,8 @@ pub(crate) fn latin_squares() -> Sudoku {
 
     // For each digit in each square, pair it with the digit of the corresponding big_square digit.
     // Treat this paired number as base 3 and convert to base 10, adding 1
-    let mut x = 0;
-    let mut y = 0;
+    let mut row = 0;
+    let mut col = 0;
 
     fn convert_base_3_to_10(mut num: u8) -> u8 {
         let mut i = 0u8;
@@ -38,7 +38,7 @@ pub(crate) fn latin_squares() -> Sudoku {
     }
 
     for square in squares.iter_mut() {
-        let big_square_value = big_square[x][y] * 10;
+        let big_square_value = big_square[row][col] * 10;
 
         for row in square.iter_mut() {
             for digit in row.iter_mut() {
@@ -52,28 +52,26 @@ pub(crate) fn latin_squares() -> Sudoku {
             }
         }
 
-        if y == 2 {
-            y = 0;
-            x += 1;
+        if col == 2 {
+            col = 0;
+            row += 1;
         } else {
-            y += 1;
+            col += 1;
         }
     }
 
-    // TODO: Create a sudoku from the provided squares
+    // Fill a sudoku board with the generated squares
     let mut sudoku = Sudoku::empty();
-    println!("{sudoku}");
     let mut row = 0;
     let mut col = 0;
 
-    while row < HOUSE_SIZE {
-        let latin_square = &squares[((row * HOUSE_SIZE) + col)];
+    while row < SQUARE_SIZE {
+        let latin_square = &squares[((row * SQUARE_SIZE) + col)];
         let square_coords = sudoku.square_coords(row, col).unwrap();
 
-        dbg!(&square_coords);
-
         for coord in square_coords {
-            let latin_square_digit = latin_square[coord.row()][coord.col()];
+            let latin_square_digit =
+                latin_square[coord.row() % SQUARE_SIZE][coord.col() % SQUARE_SIZE];
             let digit = Digit::new_unchecked(latin_square_digit);
             sudoku.cell_mut(coord).unwrap().digit = Some(digit);
         }
@@ -86,7 +84,7 @@ pub(crate) fn latin_squares() -> Sudoku {
         }
     }
 
-    println!("{sudoku}");
+    // TODO: Check that sudoku isn't valid
 
     // TODO: Swap the 2nd & 4th rows
     // TODO: Swap the 3rd & 7th rows
