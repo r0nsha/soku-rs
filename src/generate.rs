@@ -19,6 +19,20 @@ pub(crate) fn latin_squares() -> Sudoku {
     let mut x = 0;
     let mut y = 0;
 
+    fn convert_base_3_to_10(mut num: u8) -> u8 {
+        let mut i = 0u8;
+        let mut result = 0;
+
+        while num > 0 {
+            let exponent = 3u8.pow(i as _);
+            result += (num % 10) * exponent;
+            num /= 10;
+            i += 1;
+        }
+
+        result
+    }
+
     for (square_index, square) in squares.iter_mut().enumerate() {
         println!("{square}");
 
@@ -29,8 +43,13 @@ pub(crate) fn latin_squares() -> Sudoku {
                 // pair the digit with the big_square value
                 let paired = *digit + big_square_value;
 
-                // convert from base 3 to base 10
-                let base_10 = { todo!() };
+                // convert the paired numbers from base 3 to base 10
+                let base_10 = convert_base_3_to_10(paired);
+
+
+                *digit = base_10 + 1;
+
+                println!("paired={paired}, digit={digit}");
             }
         }
 
