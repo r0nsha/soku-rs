@@ -6,70 +6,47 @@ use std::{
 
 use derive_more::{Deref, Display};
 use itertools::Itertools;
+use thiserror::Error;
 
 use crate::{
     consts::{GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE},
-    error::SudokuError,
     generate,
 };
 
-pub type House<'a> = [&'a Cell; HOUSE_SIZE];
-pub type HouseMut<'a> = [&'a mut Cell; HOUSE_SIZE];
+// pub struct SudokuBuilder {
+//     sudoku: Sudoku,
+// }
+
+// impl SudokuBuilder {
+//     pub fn new() -> Self {
+//         Self {
+//             sudoku: Sudoku::new(),
+//         }
+//     }
+// }
+
+// impl Default for SudokuBuilder {
+//     fn default() -> Self {
+//         Self::new()
+//     }
+// }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Sudoku(pub(crate) [Cell; GRID_SIZE]);
 
-impl Default for Sudoku {
-    fn default() -> Self {
-        Self([Default::default(); GRID_SIZE])
-    }
-}
-
-impl Display for Sudoku {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        const PIPE: char = '|';
-
-        f.write_str(".-----.-----.-----.\n")?;
-
-        for (row_idx, row) in self.rows().enumerate() {
-            f.write_char(PIPE)?;
-
-            for (cell_idx, cell) in row.iter().enumerate() {
-                match &cell.digit {
-                    Some(digit) => write!(f, "{}", *digit)?,
-                    None => f.write_char('.')?,
-                }
-
-                if (cell_idx + 1) % SQUARE_SIZE == 0 {
-                    f.write_char(PIPE)?;
-                } else {
-                    f.write_char(' ')?;
-                }
-            }
-
-            f.write_char('\n')?;
-
-            if row_idx < HOUSE_SIZE - 1 && (row_idx + 1) % SQUARE_SIZE == 0 {
-                f.write_str(":----- ----- -----:\n")?;
-            }
-        }
-
-        f.write_str("'-----'-----'-----'")?;
-
-        Ok(())
-    }
-}
-
 impl Sudoku {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[must_use]
     pub fn new_filled() -> Self {
         generate::latin_squares()
     }
 
     #[inline]
+    #[must_use]
     pub fn cell(&self, coord: Coord) -> Option<&Cell> {
         self.0.get(coord.as_index())
     }
@@ -121,6 +98,7 @@ impl Sudoku {
             })
     }
 
+    #[must_use]
     pub fn cols(&self) -> Vec<impl Iterator<Item = &'_ Cell>> {
         (0..HOUSE_SIZE)
             .collect::<Vec<usize>>()
@@ -166,7 +144,7 @@ impl Sudoku {
             })
     }
 
-    fn square_indices(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
+    const fn square_indices(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
         let square_row = row * HOUSE_SIZE * SQUARE_SIZE;
         let square_col = col * SQUARE_SIZE;
 
@@ -187,6 +165,7 @@ impl Sudoku {
         ]
     }
 
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         for row in self.rows() {
             if !row.iter().all_unique() {
@@ -211,12 +190,52 @@ impl Sudoku {
 
     #[inline]
     fn validate_house_index(idx: usize) {
-        if idx >= HOUSE_SIZE {
-            panic!(
-                "house index must be between 0 and {}, got {idx} instead",
-                HOUSE_SIZE - 1
-            );
+        assert!(
+            idx >= HOUSE_SIZE,
+            "house index must be between 0 and {}, got {idx} instead",
+            HOUSE_SIZE - 1
+        );
+    }
+}
+
+impl Default for Sudoku {
+    fn default() -> Self {
+        Self([Cell::default(); GRID_SIZE])
+    }
+}
+
+impl Display for Sudoku {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        const PIPE: char = '|';
+
+        f.write_str(".-----.-----.-----.\n")?;
+
+        for (row_idx, row) in self.rows().enumerate() {
+            f.write_char(PIPE)?;
+
+            for (cell_idx, cell) in row.iter().enumerate() {
+                match &cell.digit {
+                    Some(digit) => write!(f, "{}", *digit)?,
+                    None => f.write_char('.')?,
+                }
+
+                if (cell_idx + 1) % SQUARE_SIZE == 0 {
+                    f.write_char(PIPE)?;
+                } else {
+                    f.write_char(' ')?;
+                }
+            }
+
+            f.write_char('\n')?;
+
+            if row_idx < HOUSE_SIZE - 1 && (row_idx + 1) % SQUARE_SIZE == 0 {
+                f.write_str(":----- ----- -----:\n")?;
+            }
         }
+
+        f.write_str("'-----'-----'-----'")?;
+
+        Ok(())
     }
 }
 
@@ -234,17 +253,22 @@ pub struct Digit(pub(crate) u8);
 
 impl Digit {
     #[inline]
+    #[must_use]
     pub fn is_valid(value: u8) -> bool {
         (1..=9).contains(&value)
     }
 
+    /// # Errors
+    ///
+    /// Will return `Error::InvalidDigit` if the value is not between 1-9
     #[inline]
     pub fn new(value: u8) -> Result<Self, SudokuError> {
         Self::try_from(value)
     }
 
     #[inline]
-    pub fn new_unchecked(value: u8) -> Self {
+    #[must_use]
+    pub const fn new_unchecked(value: u8) -> Self {
         Self(value)
     }
 }
@@ -254,7 +278,7 @@ impl TryFrom<u8> for Digit {
 
     #[inline]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if Digit::is_valid(value) {
+        if Self::is_valid(value) {
             Ok(Self(value))
         } else {
             Err(SudokuError::InvalidDigit(value))
@@ -267,22 +291,32 @@ pub struct Coord(pub usize, pub usize);
 
 impl Coord {
     #[inline]
-    pub fn from_index(index: usize, size: usize) -> Self {
+    #[must_use]
+    pub const fn from_index(index: usize, size: usize) -> Self {
         Self(index / size, index % size)
     }
 
     #[inline]
-    pub fn as_index(&self) -> usize {
+    #[must_use]
+    pub const fn as_index(&self) -> usize {
         (self.0 * HOUSE_SIZE) + self.1
     }
 
     #[inline]
-    pub fn row(&self) -> usize {
+    #[must_use]
+    pub const fn row(&self) -> usize {
         self.0
     }
 
     #[inline]
-    pub fn col(&self) -> usize {
+    #[must_use]
+    pub const fn col(&self) -> usize {
         self.1
     }
+}
+
+#[derive(Error, Debug)]
+pub enum SudokuError {
+    #[error("digit must be between 1 and 9, got {0}")]
+    InvalidDigit(u8),
 }

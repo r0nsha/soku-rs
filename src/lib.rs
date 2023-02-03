@@ -1,13 +1,21 @@
 #![forbid(unsafe_code)]
-// TODO: #![forbid(missing_docs)]
+#![deny(
+    clippy::correctness,
+    clippy::suspicious,
+    clippy::complexity,
+    clippy::perf,
+    clippy::style,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::cargo
+)]
+#![allow(clippy::module_name_repetitions)]
 
 mod consts;
-mod error;
 mod generate;
 mod sudoku;
 
 pub mod prelude {
     pub use crate::consts::*;
-    pub use crate::error::*;
     pub use crate::sudoku::*;
 }
