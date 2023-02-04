@@ -8,28 +8,7 @@ use derive_more::{Deref, Display};
 use itertools::Itertools;
 use thiserror::Error;
 
-use crate::{
-    consts::{GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE},
-    generate,
-};
-
-// pub struct SudokuBuilder {
-//     sudoku: Sudoku,
-// }
-
-// impl SudokuBuilder {
-//     pub fn new() -> Self {
-//         Self {
-//             sudoku: Sudoku::new(),
-//         }
-//     }
-// }
-
-// impl Default for SudokuBuilder {
-//     fn default() -> Self {
-//         Self::new()
-//     }
-// }
+use crate::prelude::{Generate, LatinSquares, DIGITS, GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Sudoku(pub(crate) [Cell; GRID_SIZE]);
@@ -42,8 +21,16 @@ impl Sudoku {
 
     #[must_use]
     pub fn new_filled() -> Self {
-        generate::latin_squares()
+        Self::new_with_generator(LatinSquares)
     }
+
+    #[must_use]
+    pub fn new_with_generator(generator: impl Generate) -> Self {
+        generator.generate()
+    }
+
+    // TODO: from_str
+    // TODO: from_str_lines
 
     #[inline]
     #[must_use]
@@ -57,12 +44,12 @@ impl Sudoku {
     }
 
     pub fn row(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
-        Self::validate_house_index(idx);
+        Self::assert_house_index(idx);
         self.0.iter().skip(idx * HOUSE_SIZE).take(HOUSE_SIZE)
     }
 
     pub fn row_mut(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
-        Self::validate_house_index(idx);
+        Self::assert_house_index(idx);
         self.0.iter_mut().skip(idx * HOUSE_SIZE).take(HOUSE_SIZE)
     }
 
@@ -71,7 +58,7 @@ impl Sudoku {
     }
 
     pub fn col(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
-        Self::validate_house_index(idx);
+        Self::assert_house_index(idx);
         self.0
             .iter()
             .enumerate()
@@ -85,7 +72,7 @@ impl Sudoku {
     }
 
     pub fn col_mut(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
-        Self::validate_house_index(idx);
+        Self::assert_house_index(idx);
         self.0
             .iter_mut()
             .enumerate()
@@ -108,7 +95,7 @@ impl Sudoku {
     }
 
     pub fn square_by_index(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
-        Self::validate_house_index(idx);
+        Self::assert_house_index(idx);
         self.square(Coord::from_index(idx, SQUARE_SIZE))
     }
 
@@ -125,7 +112,7 @@ impl Sudoku {
     }
 
     pub fn square_mut_by_index(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
-        Self::validate_house_index(idx);
+        Self::assert_house_index(idx);
         self.square_mut(Coord::from_index(idx, SQUARE_SIZE))
     }
 
@@ -189,11 +176,12 @@ impl Sudoku {
     }
 
     #[inline]
-    fn validate_house_index(idx: usize) {
+    fn assert_house_index(idx: usize) {
         assert!(
-            idx >= HOUSE_SIZE,
-            "house index must be between 0 and {}, got {idx} instead",
-            HOUSE_SIZE - 1
+            idx < HOUSE_SIZE,
+            "house index must be between 0 and {}, got {} instead",
+            HOUSE_SIZE - 1,
+            idx
         );
     }
 }
@@ -255,14 +243,14 @@ impl Digit {
     #[inline]
     #[must_use]
     pub fn is_valid(value: u8) -> bool {
-        (1..=9).contains(&value)
+        DIGITS.contains(&value)
     }
 
     /// # Errors
     ///
     /// Will return `Error::InvalidDigit` if the value is not between 1-9
     #[inline]
-    pub fn new(value: u8) -> Result<Self, SudokuError> {
+    pub fn new(value: u8) -> SudokuResult<Self> {
         Self::try_from(value)
     }
 
@@ -314,6 +302,8 @@ impl Coord {
         self.1
     }
 }
+
+pub type SudokuResult<T> = Result<T, SudokuError>;
 
 #[derive(Error, Debug)]
 pub enum SudokuError {
