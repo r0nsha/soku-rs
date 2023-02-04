@@ -36,12 +36,12 @@ impl Generate for LatinSquares {
 
         // We follow the algorithm from this paper: https://sites.math.washington.edu/~morrow/mcm/team2280.pdf
         // Select nine 3x3 random latin squares
-        let mut squares = std::iter::repeat_with(LatinSquare::new)
+        let mut squares = std::iter::repeat_with(LatinSquare::new_random)
             .take(9)
             .collect::<Vec<_>>();
 
         // Create another latin square, which corresponds to each square in the previous vec
-        let big_square = LatinSquare::new();
+        let big_square = LatinSquare::new_random();
 
         // For each digit in each square, pair it with the digit of the corresponding big_square digit.
         // Treat this paired number as base 3 and convert to base 10, adding 1
@@ -110,7 +110,7 @@ impl Display for LatinSquare {
 }
 
 impl LatinSquare {
-    fn new() -> Self {
+    fn new_random() -> Self {
         let mut rng = thread_rng();
         let mut square = Self::default();
 

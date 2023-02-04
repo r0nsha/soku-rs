@@ -2,6 +2,7 @@ use std::{
     fmt::{Display, Write},
     hash::Hash,
     slice::Chunks,
+    str::FromStr,
 };
 
 use derive_more::{Deref, Display};
@@ -9,7 +10,7 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use crate::prelude::{
-    Generate, LatinSquares, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
+    Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -31,8 +32,9 @@ impl Sudoku {
         generator.generate()
     }
 
-    // TODO: from_str
-    // TODO: from_str_lines
+    pub fn solve_with(&mut self, solver: impl Solve) {
+        solver.solve(self);
+    }
 
     #[inline]
     #[must_use]
@@ -227,6 +229,24 @@ impl Display for Sudoku {
 
         Ok(())
     }
+}
+
+// TODO: from_str
+impl FromStr for Sudoku {
+    type Err = ParseError;
+
+    fn from_str(_s: &str) -> Result<Self, Self::Err> {
+        Err(ParseError::InvalidChar {
+            char: 'F',
+            index: 0,
+        })
+    }
+}
+
+#[derive(Error, Debug)]
+pub enum ParseError {
+    #[error("invalid character `{char}` at index {index}")]
+    InvalidChar { char: char, index: usize },
 }
 
 // #[derive(Debug,Default,PartialEq, Eq)]

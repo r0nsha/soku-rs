@@ -13,10 +13,12 @@
 
 mod consts;
 mod generate;
+mod solve;
 mod sudoku;
 
 pub mod prelude {
     pub use crate::consts::*;
     pub use crate::generate::*;
     pub use crate::sudoku::*;
+    pub use crate::solve::*;
 }
