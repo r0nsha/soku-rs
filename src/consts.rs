@@ -6,4 +6,5 @@ pub const SQUARE_SIZE: usize = 3;
 
 #[allow(clippy::cast_possible_truncation)]
 pub const DIGITS: RangeInclusive<u8> = 1..=HOUSE_SIZE as u8;
-pub const DIGIT_INDICES: Range<usize> = 0..HOUSE_SIZE;
+pub const HOUSE_INDICES: Range<usize> = 0..HOUSE_SIZE;
+pub const DIGIT_INDICES: Range<usize> = HOUSE_INDICES;

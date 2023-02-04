@@ -6,9 +6,7 @@ use super::Solve;
 // TODO: docs
 
 // TODO: https://www.tutorialspoint.com/Sudoku-Solving-algorithms
-pub struct BacktrackingSolver {
-    // current: Coord,
-}
+pub struct BacktrackingSolver;
 
 impl Solve for BacktrackingSolver {
     fn solve(self, sudoku: &mut Sudoku) {

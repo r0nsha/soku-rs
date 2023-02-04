@@ -1,9 +1,11 @@
 use std::fmt::Display;
 
 use derive_more::{Deref, DerefMut};
-use rand::{seq::SliceRandom, thread_rng};
+use rand::{seq::SliceRandom, thread_rng, Rng};
 
-use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
+use crate::prelude::{
+    BacktrackingSolver, Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE,
+};
 
 // TODO: tests
 // TODO: docs
@@ -12,6 +14,21 @@ pub struct LatinSquares;
 
 impl Generate for LatinSquares {
     fn generate(self) -> Sudoku {
+        let mut sudoku = Self::generate_filled_sudoku();
+
+        Self::swap_rows(&mut sudoku);
+        // TODO: place 40 elements in empty board
+        Self::keep_40_random_cells(&mut sudoku);
+        // TODO: impl backtracking solver
+        // sudoku.solve_with(BacktrackingSolver);
+        // TODO: uniqueness check (count solutions)
+
+        sudoku
+    }
+}
+
+impl LatinSquares {
+    fn generate_filled_sudoku() -> Sudoku {
         const fn convert_base_3_to_10(mut num: u8) -> u8 {
             let mut i = 0u8;
             let mut result = 0;
@@ -24,17 +41,6 @@ impl Generate for LatinSquares {
             }
 
             result
-        }
-
-        fn swap_rows(sudoku: &mut Sudoku, r1: usize, r2: usize) {
-            for col in DIGIT_INDICES {
-                let r1_coord = Coord(r1, col);
-                let r2_coord = Coord(r2, col);
-
-                let temp_digit = sudoku.cell(r1_coord).unwrap().digit;
-                sudoku.cell_mut(r1_coord).unwrap().digit = sudoku.cell(r2_coord).unwrap().digit;
-                sudoku.cell_mut(r2_coord).unwrap().digit = temp_digit;
-            }
         }
 
         // We follow the algorithm from this paper: https://sites.math.washington.edu/~morrow/mcm/team2280.pdf
@@ -88,11 +94,45 @@ impl Generate for LatinSquares {
             }
         }
 
-        swap_rows(&mut sudoku, 1, 3);
-        swap_rows(&mut sudoku, 2, 6);
-        swap_rows(&mut sudoku, 5, 7);
-
         sudoku
+    }
+
+    fn swap_rows(sudoku: &mut Sudoku) {
+        fn inner(sudoku: &mut Sudoku, r1: usize, r2: usize) {
+            for col in DIGIT_INDICES {
+                let r1_coord = Coord(r1, col);
+                let r2_coord = Coord(r2, col);
+
+                let temp_digit = sudoku.cell(r1_coord).unwrap().digit;
+                sudoku.cell_mut(r1_coord).unwrap().digit = sudoku.cell(r2_coord).unwrap().digit;
+                sudoku.cell_mut(r2_coord).unwrap().digit = temp_digit;
+            }
+        }
+
+        inner(sudoku, 1, 3);
+        inner(sudoku, 2, 6);
+        inner(sudoku, 5, 7);
+    }
+
+    fn keep_40_random_cells(sudoku: &mut Sudoku) {
+        const TO_REMOVE: usize = 40;
+
+        let mut rng = thread_rng();
+        let mut removed = 0;
+
+        while removed < TO_REMOVE {
+            let random_row = rng.gen_range(DIGIT_INDICES);
+            let random_col = rng.gen_range(DIGIT_INDICES);
+
+            let cell = sudoku
+                .cell_mut(Coord(random_row, random_col))
+                .expect("cell to exist");
+
+            if cell.digit.is_some() {
+                cell.digit = None;
+                removed += 1;
+            }
+        }
     }
 }
 
