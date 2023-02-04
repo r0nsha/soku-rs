@@ -5,6 +5,7 @@ use std::{
     str::FromStr,
 };
 
+use bitflags::bitflags;
 use derive_more::{Deref, Display};
 use itertools::Itertools;
 use thiserror::Error;
@@ -12,6 +13,9 @@ use thiserror::Error;
 use crate::prelude::{
     Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
 };
+
+// TODO: tests
+// TODO: docs
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Sudoku(pub(crate) [Cell; GRID_SIZE]);
@@ -36,6 +40,26 @@ impl Sudoku {
         solver.solve(self);
     }
 
+    #[must_use]
+    pub fn count_filled_cells(&self) -> usize {
+        self.0.iter().filter_map(|cell| cell.digit).count()
+    }
+
+    #[must_use]
+    pub fn count_unfilled_cells(&self) -> usize {
+        self.0.len() - self.count_filled_cells()
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.count_filled_cells() == 0
+    }
+
+    #[must_use]
+    pub fn is_filled(&self) -> bool {
+        self.count_filled_cells() == self.0.len()
+    }
+
     #[inline]
     #[must_use]
     pub fn cell(&self, coord: Coord) -> Option<&Cell> {
@@ -45,6 +69,16 @@ impl Sudoku {
     #[inline]
     pub fn cell_mut(&mut self, coord: Coord) -> Option<&mut Cell> {
         self.0.get_mut(coord.as_index())
+    }
+
+    #[inline]
+    pub fn cells(&self) -> impl Iterator<Item = &'_ Cell> {
+        self.0.iter()
+    }
+
+    #[inline]
+    pub fn cells_mut(&mut self) -> impl Iterator<Item = &'_ mut Cell> {
+        self.0.iter_mut()
     }
 
     pub fn row(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
@@ -249,13 +283,10 @@ pub enum ParseError {
     InvalidChar { char: char, index: usize },
 }
 
-// #[derive(Debug,Default,PartialEq, Eq)]
-// pub struct Candidates(BitSet<u8>);
-
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Cell {
     pub(crate) digit: Option<Digit>,
-    //pub(crate) candidates: Candidates,
+    pub(crate) candidates: Candidates,
 }
 
 #[derive(Debug, Display, Default, Deref, PartialEq, Eq, Hash, Clone, Copy)]
@@ -292,6 +323,60 @@ impl TryFrom<u8> for Digit {
             Ok(Self(value))
         } else {
             Err(SudokuError::InvalidDigit(value))
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+pub struct Candidates(CandidatesInner);
+
+impl Candidates {
+    pub fn add(&mut self, digit: Digit) {
+        self.0.insert(digit.into());
+    }
+
+    pub fn remove(&mut self, digit: Digit) {
+        self.0.remove(digit.into());
+    }
+
+    pub fn toggle(&mut self, digit: Digit) {
+        self.0.toggle(digit.into());
+    }
+}
+
+impl Default for Candidates {
+    fn default() -> Self {
+        Self(CandidatesInner::empty())
+    }
+}
+
+bitflags! {
+    struct CandidatesInner: u64 {
+        const _1 = 0b0000_0000_0000_0001;
+        const _2 = 0b0000_0000_0000_0000;
+        const _3 = 0b0000_0000_0000_0100;
+        const _4 = 0b0000_0000_0000_1000;
+        const _5 = 0b0000_0000_0001_0000;
+        const _6 = 0b0000_0000_0010_0000;
+        const _7 = 0b0000_0000_0100_0000;
+        const _8 = 0b0000_0000_1000_0000;
+        const _9 = 0b0000_0001_0000_0000;
+    }
+}
+
+impl From<Digit> for CandidatesInner {
+    fn from(value: Digit) -> Self {
+        match value.0 {
+            1 => CandidatesInner::_1,
+            2 => CandidatesInner::_2,
+            3 => CandidatesInner::_3,
+            4 => CandidatesInner::_4,
+            5 => CandidatesInner::_5,
+            6 => CandidatesInner::_6,
+            7 => CandidatesInner::_7,
+            8 => CandidatesInner::_8,
+            9 => CandidatesInner::_9,
+            _ => unreachable!(),
         }
     }
 }

@@ -5,6 +5,9 @@ use rand::{seq::SliceRandom, thread_rng};
 
 use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
 
+// TODO: tests
+// TODO: docs
+
 pub struct LatinSquares;
 
 impl Generate for LatinSquares {
