@@ -8,14 +8,16 @@ use derive_more::{Deref, Display};
 use itertools::Itertools;
 use thiserror::Error;
 
-use crate::prelude::{Generate, LatinSquares, DIGITS, GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE};
+use crate::prelude::{
+    Generate, LatinSquares, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
+};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Sudoku(pub(crate) [Cell; GRID_SIZE]);
 
 impl Sudoku {
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new_empty() -> Self {
         Self::default()
     }
 
@@ -87,7 +89,7 @@ impl Sudoku {
 
     #[must_use]
     pub fn cols(&self) -> Vec<impl Iterator<Item = &'_ Cell>> {
-        (0..HOUSE_SIZE)
+        DIGIT_INDICES
             .collect::<Vec<usize>>()
             .iter()
             .map(|&i| self.col(i))
@@ -166,7 +168,7 @@ impl Sudoku {
             }
         }
 
-        for mut square in (0..HOUSE_SIZE).map(|i| self.square_by_index(i)) {
+        for mut square in DIGIT_INDICES.map(|i| self.square_by_index(i)) {
             if !square.all_unique() {
                 return false;
             }

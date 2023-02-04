@@ -3,7 +3,7 @@ use std::fmt::Display;
 use derive_more::{Deref, DerefMut};
 use rand::{seq::SliceRandom, thread_rng};
 
-use crate::prelude::{Coord, Digit, Generate, Sudoku, HOUSE_SIZE, SQUARE_SIZE};
+use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
 
 pub struct LatinSquares;
 
@@ -24,7 +24,7 @@ impl Generate for LatinSquares {
         }
 
         fn swap_rows(sudoku: &mut Sudoku, r1: usize, r2: usize) {
-            for col in 0..HOUSE_SIZE {
+            for col in DIGIT_INDICES {
                 let r1_coord = Coord(r1, col);
                 let r2_coord = Coord(r2, col);
 
@@ -72,7 +72,7 @@ impl Generate for LatinSquares {
         }
 
         // Fill a sudoku board with the generated squares
-        let mut sudoku = Sudoku::new();
+        let mut sudoku = Sudoku::new_empty();
 
         for (idx, latin_square) in squares.iter().enumerate() {
             for (cell_idx, cell) in sudoku.square_mut_by_index(idx).enumerate() {
