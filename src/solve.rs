@@ -1,6 +1,6 @@
 mod brute_force;
 
-pub use brute_force::BruteForceSolver;
+pub use brute_force::{BruteForceSolver,ReverseBruteForceSolver};
 
 use crate::prelude::Sudoku;
 
