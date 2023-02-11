@@ -3,9 +3,7 @@ use std::fmt::Display;
 use derive_more::{Deref, DerefMut};
 use rand::{seq::SliceRandom, thread_rng, Rng};
 
-use crate::prelude::{
-    BacktrackingSolver, Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE,
-};
+use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
 
 // TODO: tests
 // TODO: docs
@@ -83,9 +81,9 @@ impl LatinSquares {
         // Fill a sudoku board with the generated squares
         let mut sudoku = Sudoku::new_empty();
 
-        for (idx, latin_square) in squares.iter().enumerate() {
-            for (cell_idx, cell) in sudoku.square_mut_by_index(idx).enumerate() {
-                let Coord(row, col) = Coord::from_index(cell_idx, SQUARE_SIZE);
+        for (index, latin_square) in squares.iter().enumerate() {
+            for (cell_index, cell) in sudoku.square_mut(index).enumerate() {
+                let Coord(row, col) = Coord::from_index(cell_index, SQUARE_SIZE);
 
                 let latin_square_digit = latin_square[row][col];
                 let digit = Digit::new_unchecked(latin_square_digit);

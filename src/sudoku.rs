@@ -62,13 +62,13 @@ impl Sudoku {
 
     #[inline]
     #[must_use]
-    pub fn cell(&self, coord: Coord) -> Option<&Cell> {
-        self.0.get(coord.as_index())
+    pub fn cell<I: SudokuIndex>(&self, i: I) -> Option<&Cell> {
+        self.0.get(i.into_index())
     }
 
     #[inline]
-    pub fn cell_mut(&mut self, coord: Coord) -> Option<&mut Cell> {
-        self.0.get_mut(coord.as_index())
+    pub fn cell_mut<I: SudokuIndex>(&mut self, i: I) -> Option<&mut Cell> {
+        self.0.get_mut(i.into_index())
     }
 
     #[inline]
@@ -81,27 +81,28 @@ impl Sudoku {
         self.0.iter_mut()
     }
 
-    pub fn row(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
-        Self::assert_house_index(idx);
-        self.0.iter().skip(idx * HOUSE_SIZE).take(HOUSE_SIZE)
+    pub fn row(&self, index: usize) -> impl Iterator<Item = &'_ Cell> {
+        Self::assert_house_index(index);
+        self.0.iter().skip(index * HOUSE_SIZE).take(HOUSE_SIZE)
     }
 
-    pub fn row_mut(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
-        Self::assert_house_index(idx);
-        self.0.iter_mut().skip(idx * HOUSE_SIZE).take(HOUSE_SIZE)
+    pub fn row_mut(&mut self, index: usize) -> impl Iterator<Item = &'_ mut Cell> {
+        Self::assert_house_index(index);
+        self.0.iter_mut().skip(index * HOUSE_SIZE).take(HOUSE_SIZE)
     }
 
     pub fn rows(&self) -> Chunks<'_, Cell> {
         self.0.chunks(HOUSE_SIZE)
     }
 
-    pub fn col(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
-        Self::assert_house_index(idx);
+    pub fn col(&self, index: usize) -> impl Iterator<Item = &'_ Cell> {
+        Self::assert_house_index(index);
+
         self.0
             .iter()
             .enumerate()
-            .filter_map(move |(cell_idx, cell)| {
-                if Coord::from_index(cell_idx, HOUSE_SIZE).col() == idx {
+            .filter_map(move |(cell_index, cell)| {
+                if Coord::from_index(cell_index, HOUSE_SIZE).col() == index {
                     Some(cell)
                 } else {
                     None
@@ -109,13 +110,14 @@ impl Sudoku {
             })
     }
 
-    pub fn col_mut(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
-        Self::assert_house_index(idx);
+    pub fn col_mut(&mut self, index: usize) -> impl Iterator<Item = &'_ mut Cell> {
+        Self::assert_house_index(index);
+
         self.0
             .iter_mut()
             .enumerate()
-            .filter_map(move |(cell_idx, cell)| {
-                if Coord::from_index(cell_idx, HOUSE_SIZE).col() == idx {
+            .filter_map(move |(cell_index, cell)| {
+                if Coord::from_index(cell_index, HOUSE_SIZE).col() == index {
                     Some(cell)
                 } else {
                     None
@@ -132,13 +134,11 @@ impl Sudoku {
             .collect()
     }
 
-    pub fn square_by_index(&self, idx: usize) -> impl Iterator<Item = &'_ Cell> {
-        Self::assert_house_index(idx);
-        self.square(Coord::from_index(idx, SQUARE_SIZE))
-    }
+    pub fn square<I: SudokuIndex>(&self, i: I) -> impl Iterator<Item = &'_ Cell> {
+        let index = i.into_index_of(SQUARE_SIZE);
+        Self::assert_house_index(index);
 
-    pub fn square(&self, coord: Coord) -> impl Iterator<Item = &'_ Cell> {
-        let square_indices = Self::square_indices(coord);
+        let square_indices = Self::square_indices(Coord::from_index(index, SQUARE_SIZE));
 
         self.0.iter().enumerate().filter_map(move |(index, cell)| {
             if square_indices.contains(&index) {
@@ -149,13 +149,11 @@ impl Sudoku {
         })
     }
 
-    pub fn square_mut_by_index(&mut self, idx: usize) -> impl Iterator<Item = &'_ mut Cell> {
-        Self::assert_house_index(idx);
-        self.square_mut(Coord::from_index(idx, SQUARE_SIZE))
-    }
+    pub fn square_mut<I: SudokuIndex>(&mut self, i: I) -> impl Iterator<Item = &'_ mut Cell> {
+        let index = i.into_index_of(SQUARE_SIZE);
+        Self::assert_house_index(index);
 
-    pub fn square_mut(&mut self, coord: Coord) -> impl Iterator<Item = &'_ mut Cell> {
-        let square_indices = Self::square_indices(coord);
+        let square_indices = Self::square_indices(Coord::from_index(index, SQUARE_SIZE));
 
         self.0
             .iter_mut()
@@ -204,7 +202,7 @@ impl Sudoku {
             }
         }
 
-        for mut square in DIGIT_INDICES.map(|i| self.square_by_index(i)) {
+        for mut square in DIGIT_INDICES.map(|i| self.square(i)) {
             if !square.all_unique() {
                 return false;
             }
@@ -214,12 +212,12 @@ impl Sudoku {
     }
 
     #[inline]
-    fn assert_house_index(idx: usize) {
+    fn assert_house_index(index: usize) {
         assert!(
-            idx < HOUSE_SIZE,
+            index < HOUSE_SIZE,
             "house index must be between 0 and {}, got {} instead",
             HOUSE_SIZE - 1,
-            idx
+            index
         );
     }
 }
@@ -236,16 +234,16 @@ impl Display for Sudoku {
 
         f.write_str(".-----.-----.-----.\n")?;
 
-        for (row_idx, row) in self.rows().enumerate() {
+        for (row_index, row) in self.rows().enumerate() {
             f.write_char(PIPE)?;
 
-            for (cell_idx, cell) in row.iter().enumerate() {
+            for (cell_index, cell) in row.iter().enumerate() {
                 match &cell.digit {
                     Some(digit) => write!(f, "{}", *digit)?,
                     None => f.write_char('.')?,
                 }
 
-                if (cell_idx + 1) % SQUARE_SIZE == 0 {
+                if (cell_index + 1) % SQUARE_SIZE == 0 {
                     f.write_char(PIPE)?;
                 } else {
                     f.write_char(' ')?;
@@ -254,7 +252,7 @@ impl Display for Sudoku {
 
             f.write_char('\n')?;
 
-            if row_idx < HOUSE_SIZE - 1 && (row_idx + 1) % SQUARE_SIZE == 0 {
+            if row_index < HOUSE_SIZE - 1 && (row_index + 1) % SQUARE_SIZE == 0 {
                 f.write_str(":----- ----- -----:\n")?;
             }
         }
@@ -270,10 +268,11 @@ impl FromStr for Sudoku {
     type Err = ParseError;
 
     fn from_str(_s: &str) -> Result<Self, Self::Err> {
-        Err(ParseError::InvalidChar {
-            char: 'F',
-            index: 0,
-        })
+        todo!()
+        // Err(ParseError::InvalidChar {
+        //     char: 'F',
+        //     index: 0,
+        // })
     }
 }
 
@@ -331,6 +330,22 @@ impl TryFrom<u8> for Digit {
 pub struct Candidates(CandidatesInner);
 
 impl Candidates {
+    #[must_use]
+    pub const fn empty() -> Self {
+        Self(CandidatesInner::empty())
+    }
+
+    #[must_use]
+    pub fn all() -> Self {
+        let mut candidates = Self::empty();
+
+        DIGITS
+            .map(Digit::new_unchecked)
+            .for_each(|digit| candidates.add(digit));
+
+        candidates
+    }
+
     pub fn add(&mut self, digit: Digit) {
         self.0.insert(digit.into());
     }
@@ -367,15 +382,15 @@ bitflags! {
 impl From<Digit> for CandidatesInner {
     fn from(value: Digit) -> Self {
         match value.0 {
-            1 => CandidatesInner::_1,
-            2 => CandidatesInner::_2,
-            3 => CandidatesInner::_3,
-            4 => CandidatesInner::_4,
-            5 => CandidatesInner::_5,
-            6 => CandidatesInner::_6,
-            7 => CandidatesInner::_7,
-            8 => CandidatesInner::_8,
-            9 => CandidatesInner::_9,
+            1 => Self::_1,
+            2 => Self::_2,
+            3 => Self::_3,
+            4 => Self::_4,
+            5 => Self::_5,
+            6 => Self::_6,
+            7 => Self::_7,
+            8 => Self::_8,
+            9 => Self::_9,
             _ => unreachable!(),
         }
     }
@@ -393,12 +408,6 @@ impl Coord {
 
     #[inline]
     #[must_use]
-    pub const fn as_index(&self) -> usize {
-        (self.0 * HOUSE_SIZE) + self.1
-    }
-
-    #[inline]
-    #[must_use]
     pub const fn row(&self) -> usize {
         self.0
     }
@@ -407,6 +416,32 @@ impl Coord {
     #[must_use]
     pub const fn col(&self) -> usize {
         self.1
+    }
+}
+
+pub trait SudokuIndex
+where
+    Self: Sized,
+{
+    fn into_index_of(self, size: usize) -> usize;
+
+    fn into_index(self) -> usize {
+        self.into_index_of(HOUSE_SIZE)
+    }
+}
+
+impl SudokuIndex for usize {
+    #[inline]
+    fn into_index_of(self, _: usize) -> usize {
+        self
+    }
+}
+
+impl SudokuIndex for Coord {
+    #[inline]
+    #[must_use]
+    fn into_index_of(self, size: usize) -> usize {
+        (self.row() * size) + self.col()
     }
 }
 

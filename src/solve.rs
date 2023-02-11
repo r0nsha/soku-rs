@@ -1,6 +1,6 @@
-mod backtracking;
+mod brute_force;
 
-pub use backtracking::BacktrackingSolver;
+pub use brute_force::BruteForceSolver;
 
 use crate::prelude::Sudoku;
 
@@ -26,5 +26,5 @@ impl Solution {
 }
 
 pub trait Solve {
-    fn solve(self, sudoku: &mut Sudoku);
+    fn solve(self, sudoku: &mut Sudoku) -> Solution;
 }
