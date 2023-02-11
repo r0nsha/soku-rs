@@ -17,7 +17,7 @@ impl Solution {
         use Solution::{Ambiguous, Impossible, Unique};
 
         match (self, other) {
-            (Impossible, _) | (_, Impossible) => Impossible,
+            (Impossible, s) | (s, Impossible) => s,
             (Unique, Unique) => Unique,
             (Unique, Ambiguous(x)) | (Ambiguous(x), Unique) => Ambiguous(x),
             (Ambiguous(x), Ambiguous(y)) => Ambiguous(x + y),
