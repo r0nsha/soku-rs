@@ -11,7 +11,8 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use crate::prelude::{
-    Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
+    Generate, LatinSquares, Solution, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE,
+    SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -36,8 +37,8 @@ impl Sudoku {
         generator.generate()
     }
 
-    pub fn solve_with(&mut self, solver: impl Solve) {
-        solver.solve(self);
+    pub fn solve_with(&mut self, solver: impl Solve) -> Solution {
+        solver.solve(self)
     }
 
     #[must_use]
@@ -60,20 +61,29 @@ impl Sudoku {
         self.count_filled_cells() == self.0.len()
     }
 
-    #[inline]
     #[must_use]
     pub fn cell<I: SudokuIndex>(&self, i: I) -> Option<&Cell> {
         self.0.get(i.into_index())
     }
 
-    #[inline]
     pub fn cell_mut<I: SudokuIndex>(&mut self, i: I) -> Option<&mut Cell> {
         self.0.get_mut(i.into_index())
     }
 
-    #[inline]
     pub fn cells(&self) -> impl Iterator<Item = &'_ Cell> {
         self.0.iter()
+    }
+
+    pub fn set_cell<I: SudokuIndex>(&mut self, i: I, digit: Digit) -> Option<&mut Cell> {
+        let mut cell = self.cell_mut(i.into_index())?;
+        cell.digit = Some(digit);
+        Some(cell)
+    }
+
+    pub fn clear_cell<I: SudokuIndex>(&mut self, i: I) -> Option<&mut Cell> {
+        let mut cell = self.cell_mut(i.into_index())?;
+        cell.digit = None;
+        Some(cell)
     }
 
     #[inline]
@@ -102,7 +112,7 @@ impl Sudoku {
             .iter()
             .enumerate()
             .filter_map(move |(cell_index, cell)| {
-                if Coord::from_index(cell_index, HOUSE_SIZE).col() == index {
+                if Coord::from_index(cell_index).col() == index {
                     Some(cell)
                 } else {
                     None
@@ -117,7 +127,7 @@ impl Sudoku {
             .iter_mut()
             .enumerate()
             .filter_map(move |(cell_index, cell)| {
-                if Coord::from_index(cell_index, HOUSE_SIZE).col() == index {
+                if Coord::from_index(cell_index).col() == index {
                     Some(cell)
                 } else {
                     None
@@ -138,7 +148,7 @@ impl Sudoku {
         let index = i.into_index_of(SQUARE_SIZE);
         Self::assert_house_index(index);
 
-        let square_indices = Self::square_indices(Coord::from_index(index, SQUARE_SIZE));
+        let square_indices = Self::square_indices(Coord::from_index_of(index, SQUARE_SIZE));
 
         self.0.iter().enumerate().filter_map(move |(index, cell)| {
             if square_indices.contains(&index) {
@@ -153,7 +163,7 @@ impl Sudoku {
         let index = i.into_index_of(SQUARE_SIZE);
         Self::assert_house_index(index);
 
-        let square_indices = Self::square_indices(Coord::from_index(index, SQUARE_SIZE));
+        let square_indices = Self::square_indices(Coord::from_index_of(index, SQUARE_SIZE));
 
         self.0
             .iter_mut()
@@ -165,6 +175,19 @@ impl Sudoku {
                     None
                 }
             })
+    }
+
+    pub fn square_of_cell<I: SudokuIndex>(&self, i: I) -> impl Iterator<Item = &'_ Cell> {
+        let Coord(row, col) = Coord::from_index(i.into_index());
+        self.square(Coord(row - row % SQUARE_SIZE, col - col % SQUARE_SIZE))
+    }
+
+    pub fn square_mut_of_cell<I: SudokuIndex>(
+        &mut self,
+        i: I,
+    ) -> impl Iterator<Item = &'_ mut Cell> {
+        let Coord(row, col) = Coord::from_index(i.into_index());
+        self.square_mut(Coord(row - row % SQUARE_SIZE, col - col % SQUARE_SIZE))
     }
 
     const fn square_indices(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
@@ -186,6 +209,24 @@ impl Sudoku {
             square_index + HOUSE_SIZE * 2 + 1,
             square_index + HOUSE_SIZE * 2 + 2,
         ]
+    }
+
+    pub fn cell_candidates<I: SudokuIndex>(&self, i: I) -> Candidates {
+        let index = i.into_index();
+        let mut candidates = Candidates::all();
+
+        let coord = Coord::from_index(index);
+
+        self.row(coord.row())
+            .chain(self.col(coord.col()))
+            .chain(self.square_of_cell(coord.col()))
+            .for_each(|cell| {
+                if let Some(digit) = cell.digit {
+                    candidates.remove(digit);
+                }
+            });
+
+        candidates
     }
 
     #[must_use]
@@ -285,28 +326,22 @@ pub enum ParseError {
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Cell {
     pub(crate) digit: Option<Digit>,
-    pub(crate) candidates: Candidates,
+    // pub(crate) candidates: Candidates,
 }
 
 #[derive(Debug, Display, Default, Deref, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Digit(pub(crate) u8);
 
 impl Digit {
-    #[inline]
     #[must_use]
     pub fn is_valid(value: u8) -> bool {
         DIGITS.contains(&value)
     }
 
-    /// # Errors
-    ///
-    /// Will return `Error::InvalidDigit` if the value is not between 1-9
-    #[inline]
     pub fn new(value: u8) -> SudokuResult<Self> {
         Self::try_from(value)
     }
 
-    #[inline]
     #[must_use]
     pub const fn new_unchecked(value: u8) -> Self {
         Self(value)
@@ -316,7 +351,6 @@ impl Digit {
 impl TryFrom<u8> for Digit {
     type Error = SudokuError;
 
-    #[inline]
     fn try_from(value: u8) -> Result<Self, Self::Error> {
         if Self::is_valid(value) {
             Ok(Self(value))
@@ -336,14 +370,8 @@ impl Candidates {
     }
 
     #[must_use]
-    pub fn all() -> Self {
-        let mut candidates = Self::empty();
-
-        DIGITS
-            .map(Digit::new_unchecked)
-            .for_each(|digit| candidates.add(digit));
-
-        candidates
+    pub const fn all() -> Self {
+        Self(CandidatesInner::ALL)
     }
 
     pub fn add(&mut self, digit: Digit) {
@@ -357,6 +385,17 @@ impl Candidates {
     pub fn toggle(&mut self, digit: Digit) {
         self.0.toggle(digit.into());
     }
+
+    #[must_use]
+    pub fn contains(&self, digit: Digit) -> bool {
+        self.0.contains(digit.into())
+    }
+
+    pub fn digits(&self) -> impl Iterator<Item = Digit> + '_ {
+        DIGITS
+            .map(Digit::new_unchecked)
+            .filter(|digit| self.contains(*digit))
+    }
 }
 
 impl Default for Candidates {
@@ -366,9 +405,9 @@ impl Default for Candidates {
 }
 
 bitflags! {
-    struct CandidatesInner: u64 {
+    struct CandidatesInner: usize {
         const _1 = 0b0000_0000_0000_0001;
-        const _2 = 0b0000_0000_0000_0000;
+        const _2 = 0b0000_0000_0000_0010;
         const _3 = 0b0000_0000_0000_0100;
         const _4 = 0b0000_0000_0000_1000;
         const _5 = 0b0000_0000_0001_0000;
@@ -376,6 +415,8 @@ bitflags! {
         const _7 = 0b0000_0000_0100_0000;
         const _8 = 0b0000_0000_1000_0000;
         const _9 = 0b0000_0001_0000_0000;
+        const ALL = Self::_1.bits | Self::_2.bits | Self::_3.bits | Self::_4.bits
+                    | Self::_5.bits | Self::_6.bits | Self::_7.bits | Self::_8.bits | Self::_9.bits;
     }
 }
 
@@ -402,7 +443,13 @@ pub struct Coord(pub usize, pub usize);
 impl Coord {
     #[inline]
     #[must_use]
-    pub const fn from_index(index: usize, size: usize) -> Self {
+    pub const fn from_index(index: usize) -> Self {
+        Self::from_index_of(index, HOUSE_SIZE)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn from_index_of(index: usize, size: usize) -> Self {
         Self(index / size, index % size)
     }
 

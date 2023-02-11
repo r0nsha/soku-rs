@@ -83,7 +83,7 @@ impl LatinSquares {
 
         for (index, latin_square) in squares.iter().enumerate() {
             for (cell_index, cell) in sudoku.square_mut(index).enumerate() {
-                let Coord(row, col) = Coord::from_index(cell_index, SQUARE_SIZE);
+                let Coord(row, col) = Coord::from_index_of(cell_index, SQUARE_SIZE);
 
                 let latin_square_digit = latin_square[row][col];
                 let digit = Digit::new_unchecked(latin_square_digit);
