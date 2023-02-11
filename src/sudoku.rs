@@ -178,16 +178,23 @@ impl Sudoku {
     }
 
     pub fn square_of_cell<I: SudokuIndex>(&self, i: I) -> impl Iterator<Item = &'_ Cell> {
-        let Coord(row, col) = Coord::from_index(i.into_index());
-        self.square(Coord(row - row % SQUARE_SIZE, col - col % SQUARE_SIZE))
+        let coord = Coord::from_index(i.into_index());
+        self.square(Self::cell_coord_to_square_coord(coord))
     }
 
     pub fn square_mut_of_cell<I: SudokuIndex>(
         &mut self,
         i: I,
     ) -> impl Iterator<Item = &'_ mut Cell> {
-        let Coord(row, col) = Coord::from_index(i.into_index());
-        self.square_mut(Coord(row - row % SQUARE_SIZE, col - col % SQUARE_SIZE))
+        let coord = Coord::from_index(i.into_index());
+        self.square_mut(Self::cell_coord_to_square_coord(coord))
+    }
+
+    const fn cell_coord_to_square_coord(cell_coord: Coord) -> Coord {
+        Coord(
+            cell_coord.row() / SQUARE_SIZE,
+            cell_coord.col() / SQUARE_SIZE,
+        )
     }
 
     const fn square_indices(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
@@ -215,11 +222,11 @@ impl Sudoku {
         let index = i.into_index();
         let mut candidates = Candidates::all();
 
-        let coord = Coord::from_index(index);
+        let Coord(row, col) = Coord::from_index(index);
 
-        self.row(coord.row())
-            .chain(self.col(coord.col()))
-            .chain(self.square_of_cell(coord.col()))
+        self.row(row)
+            .chain(self.col(col))
+            .chain(self.square_of_cell(index))
             .for_each(|cell| {
                 if let Some(digit) = cell.digit {
                     candidates.remove(digit);
@@ -231,28 +238,17 @@ impl Sudoku {
 
     #[must_use]
     pub fn is_valid(&self) -> bool {
-        for row in self.rows() {
-            if !row.iter().all_unique() {
-                return false;
-            }
+        fn house_is_unique<'a>(house_iter: impl Iterator<Item = &'a Cell>) -> bool {
+            house_iter.filter(|cell| cell.digit.is_some()).all_unique()
         }
 
-        for mut col in self.cols() {
-            if !col.all_unique() {
-                return false;
-            }
-        }
-
-        for mut square in DIGIT_INDICES.map(|i| self.square(i)) {
-            if !square.all_unique() {
-                return false;
-            }
-        }
-
-        true
+        self.rows().all(|row| house_is_unique(row.iter()))
+            && self.cols().into_iter().all(house_is_unique)
+            && DIGIT_INDICES.map(|i| self.square(i)).all(house_is_unique)
     }
 
     #[inline]
+    #[track_caller]
     fn assert_house_index(index: usize) {
         assert!(
             index < HOUSE_SIZE,
