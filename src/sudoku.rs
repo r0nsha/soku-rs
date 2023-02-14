@@ -42,15 +42,6 @@ impl Sudoku {
     }
 
     pub fn count_solutions(&self, limit: usize) -> usize {
-        // let mut solution = Solution::Impossible;
-
-        // for _ in 0..limit {
-        //     let new_solution = self.clone().solve_with(BruteForceSolver);
-        //     solution = solution.union(new_solution);
-        // }
-
-        // solution.count()
-
         (0..limit)
             .map(|_| self.clone().solve_with(BruteForceSolver))
             .reduce(|s1, s2| s1.union(s2))
