@@ -11,8 +11,8 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use crate::prelude::{
-    Generate, LatinSquares, Solution, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE,
-    SQUARE_SIZE,
+    BruteForceSolver, Generate, LatinSquares, Solution, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
+    HOUSE_SIZE, SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -42,7 +42,19 @@ impl Sudoku {
     }
 
     pub fn count_solutions(&self, limit: usize) -> usize {
-        todo!()
+        // let mut solution = Solution::Impossible;
+
+        // for _ in 0..limit {
+        //     let new_solution = self.clone().solve_with(BruteForceSolver);
+        //     solution = solution.union(new_solution);
+        // }
+
+        // solution.count()
+
+        (0..limit)
+            .map(|_| self.clone().solve_with(BruteForceSolver))
+            .reduce(|s1, s2| s1.union(s2))
+            .map_or(0, |s| s.count())
     }
 
     pub fn is_unique(&self) -> bool {

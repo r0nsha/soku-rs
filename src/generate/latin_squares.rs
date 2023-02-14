@@ -16,9 +16,8 @@ impl Generate for LatinSquares {
 
         Self::swap_rows(&mut sudoku);
         Self::keep_40_random_cells(&mut sudoku);
-        // TODO: impl backtracking solver
-        // sudoku.solve_with(BacktrackingSolver);
         // TODO: uniqueness check (count solutions)
+        dbg!(sudoku.count_solutions(100));
         // TODO: mark remaining cells as givens (is_given: true)
 
         sudoku

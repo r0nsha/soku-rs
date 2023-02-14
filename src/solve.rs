@@ -23,6 +23,15 @@ impl Solution {
             (Ambiguous(x), Ambiguous(y)) => Ambiguous(x + y),
         }
     }
+
+    #[must_use]
+    pub const fn count(&self) -> usize {
+        match self {
+            Self::Impossible => 0,
+            Self::Unique => 1,
+            Self::Ambiguous(n) => *n,
+        }
+    }
 }
 
 pub trait Solve {
