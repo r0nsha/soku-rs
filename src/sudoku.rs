@@ -42,6 +42,8 @@ impl Sudoku {
     }
 
     pub fn count_solutions(&self, limit: usize) -> usize {
+        // TODO: instead of constraining the solver, we should put the candidate in the board
+        // before solving it?
         let mut solution_count = 0usize;
         let mut constraints = Vec::<Constraint>::new();
 
