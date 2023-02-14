@@ -20,6 +20,7 @@ impl Generate for LatinSquares {
         // TODO: impl backtracking solver
         // sudoku.solve_with(BacktrackingSolver);
         // TODO: uniqueness check (count solutions)
+        // TODO: mark remaining cells as givens (is_given: true)
 
         sudoku
     }

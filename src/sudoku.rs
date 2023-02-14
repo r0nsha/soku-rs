@@ -322,6 +322,7 @@ pub enum ParseError {
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Cell {
     pub(crate) digit: Option<Digit>,
+    pub(crate) is_given: bool,
     // pub(crate) candidates: Candidates,
 }
 
