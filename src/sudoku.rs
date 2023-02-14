@@ -11,8 +11,8 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use crate::prelude::{
-    BruteForceSolver, Generate, LatinSquares, Solution, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
-    HOUSE_SIZE, SQUARE_SIZE,
+    BruteForceSolver, Constraint, Generate, LatinSquares, Solution, Solve, DIGITS, DIGIT_INDICES,
+    GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -42,10 +42,28 @@ impl Sudoku {
     }
 
     pub fn count_solutions(&self, limit: usize) -> usize {
-        (0..limit)
-            .map(|_| self.clone().solve_with(BruteForceSolver))
-            .reduce(|s1, s2| s1.union(s2))
-            .map_or(0, |s| s.count())
+        let mut solution_count = 0usize;
+        let mut constraints = Vec::<Constraint>::new();
+
+        for (i, cell) in self.cells().enumerate().filter(|(_, c)| c.digit.is_none()) {
+            let candidates = self.cell_candidates(i);
+            constraints.extend(
+                candidates
+                    .digits()
+                    .map(|digit| Constraint(cell.coord, digit)),
+            )
+        }
+
+        let mut i = 0;
+        while solution_count < limit {
+            let solution = self.clone().solve_with(BruteForceSolver {
+                constraint: constraints.get(i).copied(),
+            });
+            solution_count += solution.count();
+            i += 1;
+        }
+
+        solution_count
     }
 
     pub fn is_unique(&self) -> bool {
@@ -272,7 +290,13 @@ impl Sudoku {
 
 impl Default for Sudoku {
     fn default() -> Self {
-        Self([Cell::default(); GRID_SIZE])
+        let mut cells = [Cell::default(); GRID_SIZE];
+
+        for (index, cell) in cells.iter_mut().enumerate() {
+            cell.coord = Coord::from_index(index);
+        }
+
+        Self(cells)
     }
 }
 
@@ -332,6 +356,7 @@ pub enum ParseError {
 
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Cell {
+    pub(crate) coord: Coord,
     pub(crate) digit: Option<Digit>,
     pub(crate) is_given: bool,
     // pub(crate) candidates: Candidates,
@@ -399,10 +424,16 @@ impl Candidates {
         self.0.contains(digit.into())
     }
 
+    // PERF: inefficient
     pub fn digits(&self) -> impl Iterator<Item = Digit> + '_ {
         DIGITS
             .map(Digit::new_unchecked)
             .filter(|digit| self.contains(*digit))
+    }
+
+    // PERF: inefficient
+    pub fn count(&self) -> usize {
+        self.digits().count()
     }
 }
 

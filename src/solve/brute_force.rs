@@ -1,21 +1,23 @@
-use crate::prelude::{Sudoku, GRID_SIZE};
+use crate::prelude::{Coord, Sudoku, GRID_SIZE};
 
-use super::{Solution, Solve};
+use super::{Constraint, Solution, Solve};
 
 // TODO: tests
 // TODO: docs
 
 // TODO: https://www.tutorialspoint.com/Sudoku-Solving-algorithms
-pub struct BruteForceSolver;
+pub struct BruteForceSolver {
+    pub constraint: Option<Constraint>,
+}
 
 impl Solve for BruteForceSolver {
     fn solve(self, sudoku: &mut Sudoku) -> Solution {
-        Self::solve_inner(sudoku, 0)
+        self.solve_inner(sudoku, 0)
     }
 }
 
 impl BruteForceSolver {
-    fn solve_inner(sudoku: &mut Sudoku, mut index: usize) -> Solution {
+    fn solve_inner(&self, sudoku: &mut Sudoku, mut index: usize) -> Solution {
         while index < GRID_SIZE && sudoku.cell(index).unwrap().digit.is_some() {
             index += 1;
         }
@@ -24,10 +26,23 @@ impl BruteForceSolver {
             return Solution::Unique;
         }
 
-        for digit in sudoku.cell_candidates(index).digits() {
+        let coord = Coord::from_index(index);
+        let candidates = sudoku.cell_candidates(index);
+        let candidate_count = candidates.count();
+
+        for digit in candidates.digits() {
+            match self.constraint {
+                Some(constraint)
+                    if candidate_count > 1 && constraint == Constraint(coord, digit) =>
+                {
+                    continue;
+                }
+                _ => (),
+            }
+
             sudoku.set_cell(index, digit);
 
-            if Self::solve_inner(sudoku, index + 1) == Solution::Unique {
+            if self.solve_inner(sudoku, index + 1) == Solution::Unique {
                 return Solution::Unique;
             }
         }
