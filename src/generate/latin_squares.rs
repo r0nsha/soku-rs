@@ -15,7 +15,6 @@ impl Generate for LatinSquares {
         let mut sudoku = Self::generate_filled_sudoku();
 
         Self::swap_rows(&mut sudoku);
-        // TODO: place 40 elements in empty board
         Self::keep_40_random_cells(&mut sudoku);
         // TODO: impl backtracking solver
         // sudoku.solve_with(BacktrackingSolver);

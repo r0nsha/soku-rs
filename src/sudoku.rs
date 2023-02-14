@@ -28,7 +28,7 @@ impl Sudoku {
     }
 
     #[must_use]
-    pub fn new_filled() -> Self {
+    pub fn new_unique() -> Self {
         Self::new_with_generator(LatinSquares)
     }
 
@@ -39,6 +39,14 @@ impl Sudoku {
 
     pub fn solve_with(&mut self, solver: impl Solve) -> Solution {
         solver.solve(self)
+    }
+
+    pub fn count_solutions(&self, limit: usize) -> usize {
+        todo!()
+    }
+
+    pub fn is_unique(&self) -> bool {
+        self.count_solutions(2) == 1
     }
 
     #[must_use]
