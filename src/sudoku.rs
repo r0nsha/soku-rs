@@ -54,7 +54,9 @@ impl Sudoku {
             )
         }
 
+        let limit = limit.clamp(0, constraints.len());
         let mut i = 0;
+
         while solution_count < limit {
             let solution = self.clone().solve_with(BruteForceSolver {
                 constraint: constraints.get(i).copied(),
