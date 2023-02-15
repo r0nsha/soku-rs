@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use derive_more::{Deref, DerefMut};
-use rand::{seq::SliceRandom, thread_rng, Rng};
+use rand::{seq::SliceRandom, thread_rng};
 
 use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
 
@@ -12,6 +12,7 @@ pub struct LatinSquares;
 
 impl Generate for LatinSquares {
     fn generate(self) -> Sudoku {
+        // TODO: check that brute force solver generates valid sudokus....
         let mut sudoku = Self::generate_filled_sudoku();
 
         Self::swap_rows(&mut sudoku);
@@ -27,11 +28,13 @@ impl Generate for LatinSquares {
                 sudoku.clear_cell(coord);
 
                 if !sudoku.is_unique() {
-                    dbg!(
-                        "whoops",
-                        sudoku.count_filled_cells(),
-                        sudoku.count_solutions(2)
-                    );
+                    // dbg!(
+                    //     "whoops",
+                    //     sudoku.count_filled_cells(),
+                    //     sudoku.count_solutions(2)
+                    // );
+                    println!("{sudoku}");
+                    std::thread::sleep(std::time::Duration::from_millis(1000));
                     sudoku.set_cell(coord, digit);
                 }
             }

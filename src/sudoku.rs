@@ -12,8 +12,8 @@ use rand::Rng;
 use thiserror::Error;
 
 use crate::prelude::{
-    BruteForceSolver, Generate, LatinSquares, Solution, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
-    HOUSE_SIZE, SQUARE_SIZE,
+    BruteForceSolver, Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE,
+    SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -38,13 +38,17 @@ impl Sudoku {
         generator.generate()
     }
 
-    pub fn solve_with(&mut self, solver: impl Solve) -> Solution {
+    pub fn solve_with(&mut self, solver: impl Solve) -> bool {
         solver.solve(self)
     }
 
     pub fn count_solutions(&self, limit: usize) -> usize {
-        let mut solution_count = 0usize;
-        let mut all_candidates = Vec::<(Coord, Digit)>::new();
+        if self.is_filled() {
+            return 1;
+        }
+
+        let mut solutions = vec![];
+        let mut all_candidates = vec![];
 
         for (i, cell) in self.cells().enumerate().filter(|(_, c)| c.digit.is_none()) {
             all_candidates.extend(
@@ -54,27 +58,23 @@ impl Sudoku {
             )
         }
 
-        if all_candidates.is_empty() {
-            return 1;
-        }
-
         let limit = limit.clamp(0, all_candidates.len());
-        let mut i = 0;
 
-        while solution_count < limit {
-            let mut sudoku = self.clone();
-
-            if let Some(constraint) = all_candidates.get(i).copied() {
-                sudoku.set_cell(constraint.0, constraint.1);
+        for candidate in all_candidates.iter().copied() {
+            if solutions.len() == limit {
+                break;
             }
 
-            let solution = sudoku.solve_with(BruteForceSolver);
+            let mut sudoku = self.clone();
 
-            solution_count += solution.count();
-            i += 1;
+            sudoku.set_cell(candidate.0, candidate.1);
+
+            if sudoku.solve_with(BruteForceSolver) && solutions.iter().any(|s| s != &sudoku) {
+                solutions.push(sudoku);
+            }
         }
 
-        solution_count
+        solutions.len()
     }
 
     pub fn is_unique(&self) -> bool {

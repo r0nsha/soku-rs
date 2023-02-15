@@ -1,6 +1,6 @@
 use crate::prelude::{Sudoku, GRID_SIZE};
 
-use super::{Solution, Solve};
+use super::Solve;
 
 // TODO: tests
 // TODO: docs
@@ -9,31 +9,31 @@ use super::{Solution, Solve};
 pub struct BruteForceSolver;
 
 impl Solve for BruteForceSolver {
-    fn solve(self, sudoku: &mut Sudoku) -> Solution {
+    fn solve(self, sudoku: &mut Sudoku) -> bool {
         Self::solve_inner(sudoku, 0)
     }
 }
 
 impl BruteForceSolver {
-    fn solve_inner(sudoku: &mut Sudoku, mut index: usize) -> Solution {
+    fn solve_inner(sudoku: &mut Sudoku, mut index: usize) -> bool {
         while index < GRID_SIZE && sudoku.cell(index).unwrap().digit.is_some() {
             index += 1;
         }
 
         if index == GRID_SIZE {
-            return Solution::Unique;
+            return true;
         }
 
         for digit in sudoku.cell_candidates(index).digits() {
             sudoku.set_cell(index, digit);
 
-            if Self::solve_inner(sudoku, index + 1) == Solution::Unique {
-                return Solution::Unique;
+            if Self::solve_inner(sudoku, index + 1) {
+                return true;
             }
         }
 
         sudoku.clear_cell(index);
 
-        Solution::Impossible
+        false
     }
 }
