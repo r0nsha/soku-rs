@@ -44,9 +44,6 @@ impl From<usize> for Solution {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct Constraint(pub Coord, pub Digit);
-
 pub trait Solve {
     fn solve(self, sudoku: &mut Sudoku) -> Solution;
 }
