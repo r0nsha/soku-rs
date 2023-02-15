@@ -12,8 +12,8 @@ use rand::Rng;
 use thiserror::Error;
 
 use crate::prelude::{
-    BruteForceSolver, Generate, Config, LatinSquares, Solve, DIGITS, DIGIT_INDICES,
-    GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
+    BruteForceSolver, Config, Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
+    HOUSE_SIZE, SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -58,31 +58,26 @@ impl Sudoku {
         }
 
         let mut solutions = vec![];
-        let mut all_candidates = vec![];
 
         for (i, cell) in self.cells().enumerate().filter(|(_, c)| c.digit.is_none()) {
-            all_candidates.extend(
-                self.cell_candidates(i)
-                    .digits()
-                    .map(|digit| (cell.coord, digit)),
-            )
-        }
+            for candidate in self
+                .cell_candidates(i)
+                .digits()
+                .map(|digit| (cell.coord, digit))
+            {
+                if solutions.len() == limit {
+                    break;
+                }
 
-        let limit = limit.clamp(0, all_candidates.len());
+                let mut sudoku = self.clone();
 
-        for candidate in all_candidates.iter().copied() {
-            if solutions.len() == limit {
-                break;
-            }
+                sudoku.set_cell(candidate.0, candidate.1);
 
-            let mut sudoku = self.clone();
+                let solved = sudoku.solve_with(BruteForceSolver);
 
-            sudoku.set_cell(candidate.0, candidate.1);
-
-            let solved = sudoku.solve_with(BruteForceSolver);
-
-            if solved && (solutions.is_empty() || solutions.iter().any(|s| s != &sudoku)) {
-                solutions.push(sudoku);
+                if solved && (solutions.is_empty() || solutions.iter().any(|s| s != &sudoku)) {
+                    solutions.push(sudoku);
+                }
             }
         }
 
@@ -395,6 +390,7 @@ pub struct Digit(pub(crate) u8);
 
 impl Digit {
     #[must_use]
+    #[inline]
     pub fn is_valid(value: u8) -> bool {
         DIGITS.contains(&value)
     }
@@ -404,6 +400,7 @@ impl Digit {
     }
 
     #[must_use]
+    #[inline]
     pub const fn new_unchecked(value: u8) -> Self {
         Self(value)
     }
