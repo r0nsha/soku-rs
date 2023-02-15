@@ -5,56 +5,47 @@ use rand::{seq::SliceRandom, thread_rng};
 
 use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
 
+use super::GenerationConfig;
+
 // TODO: tests
 // TODO: docs
 
 pub struct LatinSquares;
 
 impl Generate for LatinSquares {
-    fn generate(self) -> Sudoku {
+    fn generate(self, config: GenerationConfig) -> Sudoku {
         let filled_sudoku = Self::generate_filled_sudoku();
 
-        'main: loop {
+        let mut rng = thread_rng();
+
+        'pick_40_random_cells: loop {
             let mut sudoku = Self::with_40_random_cells(filled_sudoku.clone());
 
-            let mut rng = thread_rng();
-
-            // TODO: enum Difficult { Easy, Medium, Hard, Expert }
-            // TODO: try to reach ~20 cells:
-            //
-            let coord = Coord::random(&mut rng);
             let max_givens = sudoku.count_filled_cells();
             let mut tried_givens = HashSet::new();
 
-            if let Some(digit) = sudoku.cell(coord).unwrap().digit {
-                tried_givens.insert(coord);
-                sudoku.clear_cell(coord);
+            'remove_givens: loop {
+                let coord = Coord::random(&mut rng);
 
-                if sudoku.is_unique() {
-                    // TODO: lower number
-                    if sudoku.count_filled_cells() == 50 {
-                        // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
-                        // TODO: mark remaining cells as givens (is_given: true)
-                        println!("{sudoku}");
-                        return sudoku;
-                    } else if tried_givens.len() == max_givens {
-                        continue 'main;
+                if let Some(digit) = sudoku.cell(coord).unwrap().digit {
+                    tried_givens.insert(coord);
+                    sudoku.clear_cell(coord);
+
+                    if sudoku.is_unique() {
+                        // TODO: lower number
+                        if sudoku.count_filled_cells() == 25 {
+                            // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
+                            // TODO: mark remaining cells as givens (is_given: true)
+                            return sudoku;
+                        } else if tried_givens.len() == max_givens {
+                            continue 'pick_40_random_cells;
+                        } else {
+                            continue 'remove_givens;
+                        }
                     } else {
-                        // all good, remove another given
+                        sudoku.set_cell(coord, digit);
                     }
-                    //     if reached target difficulty (filled_cells == 20 for now) {
-                    //       return sudoku
-                    //   } else {
-                    //     sudoku.set_cell(coord, digit)
-                    //
-                    //     if tried_all_givens {
-                    //       restart and pick another 40 cells
-                    //     } else {
-                    //       try another coord
-                    //     }
                 }
-            } else {
-                //   try another coord
             }
         }
     }
