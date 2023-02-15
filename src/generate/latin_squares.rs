@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::HashSet, fmt::Display};
 
 use derive_more::{Deref, DerefMut};
 use rand::{seq::SliceRandom, thread_rng};
@@ -12,43 +12,45 @@ pub struct LatinSquares;
 
 impl Generate for LatinSquares {
     fn generate(self) -> Sudoku {
-        let mut sudoku = Self::generate_filled_sudoku();
+        let mut filled_sudoku = Self::generate_filled_sudoku();
 
-        Self::swap_rows(&mut sudoku);
+        Self::swap_rows(&mut filled_sudoku);
 
-        let sudoku = Self::with_40_random_cells(sudoku);
+        let sudoku = Self::with_40_random_cells(filled_sudoku.clone());
+
+        let mut rng = thread_rng();
 
         // TODO: enum Difficult { Easy, Medium, Hard, Expert }
         // TODO: try to reach ~20 cells:
         //
-        // coord = Coord::random()
-        // tried_givens = HashSet::new()
-        //
-        // if there's a digit in that random coord {
-        //   tried_givens.insert(coord)
-        //   sudoku.clear_cell(coord)
-        //
-        //   if sudoku.is_unique() {
-        //     if reached target difficulty (filled_cells == 20 for now) {
-        //       return sudoku
-        //     } else if tried_all_givens {
-        //       restart and pick another 40 cells
-        //     } else {
-        //       remove another given
-        //     }
-        //   } else {
-        //     sudoku.set_cell(coord, digit)
-        //
-        //     if tried_all_givens {
-        //       restart and pick another 40 cells
-        //     } else {
-        //       try another coord
-        //     }
-        //   }
-        // } else {
-        //   try another coord
-        // }
-        //
+        let coord = Coord::random(&mut rng);
+        let mut tried_givens = HashSet::new();
+
+        if let Some(digit) = sudoku.cell(coord).unwrap().digit {
+            tried_givens.insert(coord);
+            //   sudoku.clear_cell(coord)
+            //
+            //   if sudoku.is_unique() {
+            //     if reached target difficulty (filled_cells == 20 for now) {
+            //       return sudoku
+            //     } else if tried_all_givens {
+            //       restart and pick another 40 cells
+            //     } else {
+            //       remove another given
+            //     }
+            //   } else {
+            //     sudoku.set_cell(coord, digit)
+            //
+            //     if tried_all_givens {
+            //       restart and pick another 40 cells
+            //     } else {
+            //       try another coord
+            //     }
+            //   }
+            //
+        } else {
+            //   try another coord
+        }
 
         // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
         // TODO: mark remaining cells as givens (is_given: true)
