@@ -12,8 +12,8 @@ use rand::Rng;
 use thiserror::Error;
 
 use crate::prelude::{
-    BruteForceSolver, Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE, HOUSE_SIZE,
-    SQUARE_SIZE,
+    BruteForceSolver, Generate, Config, LatinSquares, Solve, DIGITS, DIGIT_INDICES,
+    GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -29,13 +29,13 @@ impl Sudoku {
     }
 
     #[must_use]
-    pub fn new_unique() -> Self {
-        Self::new_with_generator(LatinSquares)
+    pub fn new_unique(config: Config) -> Self {
+        Self::new_with_generator(LatinSquares, config)
     }
 
     #[must_use]
-    pub fn new_with_generator(generator: impl Generate) -> Self {
-        generator.generate()
+    pub fn new_with_generator(generator: impl Generate, config: Config) -> Self {
+        generator.generate(config)
     }
 
     #[must_use]
@@ -574,4 +574,3 @@ pub enum SudokuError {
     #[error("digit must be between 1 and 9, got {0}")]
     InvalidDigit(u8),
 }
-
