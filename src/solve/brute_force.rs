@@ -49,7 +49,7 @@ impl BruteForceSolver {
                 best_candidates_count = candidates_count;
                 result = Some((i, candidates));
 
-                if best_candidates_count == 0 {
+                if best_candidates_count <= 1 {
                     break;
                 }
             }
