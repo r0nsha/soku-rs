@@ -38,6 +38,16 @@ impl Sudoku {
         generator.generate()
     }
 
+    #[must_use]
+    pub const fn as_slice(&self) -> &[Cell] {
+        &self.0
+    }
+
+    #[must_use]
+    pub fn as_slice_mut(&mut self) -> &mut [Cell] {
+        &mut self.0
+    }
+
     pub fn solve_with(&mut self, solver: impl Solve) -> bool {
         solver.solve(self)
     }
@@ -69,7 +79,9 @@ impl Sudoku {
 
             sudoku.set_cell(candidate.0, candidate.1);
 
-            if sudoku.solve_with(BruteForceSolver) && solutions.iter().any(|s| s != &sudoku) {
+            let solved = sudoku.solve_with(BruteForceSolver);
+
+            if solved && (solutions.is_empty() || solutions.iter().any(|s| s != &sudoku)) {
                 solutions.push(sudoku);
             }
         }

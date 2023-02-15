@@ -12,47 +12,47 @@ pub struct LatinSquares;
 
 impl Generate for LatinSquares {
     fn generate(self) -> Sudoku {
-        // TODO: check that brute force solver generates valid sudokus....
         let mut sudoku = Self::generate_filled_sudoku();
 
         Self::swap_rows(&mut sudoku);
 
-        let mut rng = thread_rng();
+        let sudoku = Self::with_40_random_cells(sudoku);
 
-        let target_givens = 70;
-        while sudoku.count_filled_cells() > target_givens {
-            let coord = Coord::random(&mut rng);
-            let digit = sudoku.cell(coord).unwrap().digit;
+        // TODO: try to reach ~20 cells:
+        //
+        // coord = Coord::random()
+        // tried_givens = HashSet::new()
+        //
+        // if there's a digit in that random coord {
+        //   tried_givens.insert(coord)
+        //   sudoku.clear_cell(coord)
+        //
+        //   if sudoku.is_unique() {
+        //     if reached target difficulty (filled_cells == 20 for now) {
+        //       return sudoku
+        //     } else if tried_all_givens {
+        //       restart and pick another 40 cells
+        //     } else {
+        //       remove another given
+        //     }
+        //   } else {
+        //     sudoku.set_cell(coord, digit)
+        //
+        //     if tried_all_givens {
+        //       restart and pick another 40 cells
+        //     } else {
+        //       try another coord
+        //     }
+        //   }
+        // } else {
+        //   try another coord
+        // }
+        //
 
-            if let Some(digit) = digit {
-                sudoku.clear_cell(coord);
-
-                if !sudoku.is_unique() {
-                    // dbg!(
-                    //     "whoops",
-                    //     sudoku.count_filled_cells(),
-                    //     sudoku.count_solutions(2)
-                    // );
-                    println!("{sudoku}");
-                    std::thread::sleep(std::time::Duration::from_millis(1000));
-                    sudoku.set_cell(coord, digit);
-                }
-            }
-        }
-
-        dbg!(
-            sudoku.is_unique(),
-            sudoku.count_solutions(100),
-            sudoku.count_filled_cells(),
-            sudoku.is_valid()
-        );
+        // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
+        // TODO: mark remaining cells as givens (is_given: true)
 
         println!("{sudoku}");
-
-        // Self::keep_40_random_cells(&mut sudoku);
-        // TODO: uniqueness check (count solutions)
-        // dbg!(sudoku.count_solutions(2));
-        // TODO: mark remaining cells as givens (is_given: true)
 
         sudoku
     }
@@ -145,20 +145,32 @@ impl LatinSquares {
         inner(sudoku, 5, 7);
     }
 
-    fn keep_40_random_cells(sudoku: &mut Sudoku) {
-        const TO_REMOVE: usize = 40;
+    fn with_40_random_cells(sudoku: Sudoku) -> Sudoku {
+        fn inner(mut sudoku: Sudoku) -> Sudoku {
+            const TO_REMOVE: usize = 40;
 
-        let mut rng = thread_rng();
-        let mut removed = 0;
+            let mut rng = thread_rng();
+            let mut removed = 0;
 
-        while removed < TO_REMOVE {
-            let random_coord = Coord::random(&mut rng);
+            while removed < TO_REMOVE {
+                let random_coord = Coord::random(&mut rng);
 
-            let cell = sudoku.cell_mut(random_coord).expect("cell to exist");
+                let cell = sudoku.cell_mut(random_coord).expect("cell to exist");
 
-            if cell.digit.is_some() {
-                cell.digit = None;
-                removed += 1;
+                if cell.digit.is_some() {
+                    cell.digit = None;
+                    removed += 1;
+                }
+            }
+
+            sudoku
+        }
+
+        loop {
+            let sudoku = inner(sudoku.clone());
+
+            if sudoku.is_unique() {
+                break sudoku;
             }
         }
     }
