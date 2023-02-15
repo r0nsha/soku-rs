@@ -10,7 +10,10 @@ pub struct BruteForceSolver;
 
 impl Solve for BruteForceSolver {
     fn solve(self, sudoku: &mut Sudoku) -> bool {
-        Self::solve_inner(sudoku, 0)
+        let now = std::time::Instant::now();
+        let result = Self::solve_inner(sudoku, 0);
+        println!("Elapsed: {:.2?}", now.elapsed());
+        result
     }
 }
 
