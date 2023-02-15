@@ -60,18 +60,14 @@ impl Sudoku {
         let mut solutions = Vec::with_capacity(limit);
 
         for (i, cell) in self.cells().enumerate().filter(|(_, c)| c.digit.is_none()) {
-            for candidate in self
-                .cell_candidates(i)
-                .digits()
-                .map(|digit| (cell.coord, digit))
-            {
+            for digit in self.cell_candidates(i).digits() {
                 if solutions.len() == limit {
                     break;
                 }
 
                 let mut sudoku = self.clone();
 
-                sudoku.set_cell(candidate.0, candidate.1);
+                sudoku.set_cell(cell.coord, digit);
 
                 let solved = sudoku.solve_with(BruteForceSolver);
 
