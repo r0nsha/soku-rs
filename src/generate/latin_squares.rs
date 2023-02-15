@@ -18,6 +18,7 @@ impl Generate for LatinSquares {
 
         let sudoku = Self::with_40_random_cells(sudoku);
 
+        // TODO: enum Difficult { Easy, Medium, Hard, Expert }
         // TODO: try to reach ~20 cells:
         //
         // coord = Coord::random()
