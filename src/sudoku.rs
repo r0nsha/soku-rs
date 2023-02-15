@@ -273,14 +273,15 @@ impl Sudoku {
 
         let Coord(row, col) = Coord::from_index(index);
 
-        self.row(row)
+        for cell in self
+            .row(row)
             .chain(self.col(col))
             .chain(self.square_of_cell(index))
-            .for_each(|cell| {
-                if let Some(digit) = cell.digit {
-                    candidates.remove(digit);
-                }
-            });
+        {
+            if let Some(digit) = cell.digit {
+                candidates.remove(digit);
+            }
+        }
 
         candidates
     }
