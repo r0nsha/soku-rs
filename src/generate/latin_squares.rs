@@ -35,6 +35,7 @@ impl Generate for LatinSquares {
 
                 if let Some(digit) = sudoku.cell(coord).unwrap().digit {
                     tried_givens.insert(coord);
+                    println!("{}", tried_givens.len());
                     sudoku.clear_cell(coord);
 
                     if sudoku.is_unique() {
