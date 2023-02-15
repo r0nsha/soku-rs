@@ -10,10 +10,7 @@ pub struct BruteForceSolver;
 
 impl Solve for BruteForceSolver {
     fn solve(self, sudoku: &mut Sudoku) -> bool {
-        // let now = std::time::Instant::now();
-        let result = Self::solve_inner(sudoku);
-        // println!("Elapsed: {:.2?}", now.elapsed());
-        result
+        Self::solve_inner(sudoku)
     }
 }
 
@@ -36,23 +33,24 @@ impl BruteForceSolver {
         }
     }
 
-    // TODO: needs a refactor
     fn cell_with_least_candidates(sudoku: &Sudoku) -> Option<(usize, Candidates)> {
         let mut best_candidates_count = usize::MAX;
         let mut result = None;
 
-        for (i, cell) in sudoku.cells().enumerate() {
-            if cell.digit.is_none() {
-                let candidates = sudoku.cell_candidates(i);
-                let candidates_count = candidates.count();
+        for (i, _) in sudoku
+            .cells()
+            .enumerate()
+            .filter(|(_, cell)| cell.digit.is_none())
+        {
+            let candidates = sudoku.cell_candidates(i);
+            let candidates_count = candidates.count();
 
-                if candidates_count < best_candidates_count {
-                    best_candidates_count = candidates_count;
-                    result = Some((i, candidates));
+            if candidates_count < best_candidates_count {
+                best_candidates_count = candidates_count;
+                result = Some((i, candidates));
 
-                    if best_candidates_count == 0 {
-                        break;
-                    }
+                if best_candidates_count == 0 {
+                    break;
                 }
             }
         }

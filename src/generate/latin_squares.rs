@@ -21,13 +21,13 @@ impl Generate for LatinSquares {
             Difficulty::Easy => 36,
             Difficulty::Medium => 30,
             Difficulty::Hard => 25,
-            Difficulty::Expert => 22,
+            Difficulty::Expert => 23,
         };
 
         'pick_40_random_cells: loop {
             let mut sudoku = Self::with_40_random_cells(filled_sudoku.clone());
 
-            let max_givens = sudoku.count_filled_cells();
+            let max_givens = sudoku.count_unfilled_cells();
             let mut tried_givens = HashSet::new();
 
             'remove_givens: loop {
@@ -35,7 +35,6 @@ impl Generate for LatinSquares {
 
                 if let Some(digit) = sudoku.cell(coord).unwrap().digit {
                     tried_givens.insert(coord);
-                    println!("{}", tried_givens.len());
                     sudoku.clear_cell(coord);
 
                     if sudoku.is_unique() {
@@ -45,11 +44,13 @@ impl Generate for LatinSquares {
                                 cell.is_given = true;
                             }
                             return sudoku;
-                        } else if tried_givens.len() == max_givens {
+                        } else if tried_givens.len() >= max_givens {
                             continue 'pick_40_random_cells;
                         } else {
                             continue 'remove_givens;
                         }
+                    } else if tried_givens.len() >= max_givens {
+                        continue 'pick_40_random_cells;
                     } else {
                         sudoku.set_cell(coord, digit);
                     }
