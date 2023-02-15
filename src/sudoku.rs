@@ -60,12 +60,8 @@ impl Sudoku {
         let mut solutions = Vec::with_capacity(limit);
 
         // TODO: pre-calculate all cell candidates
-        for (i, cell) in self.cells().enumerate().filter(|(_, c)| c.digit.is_none()) {
+        'outer: for (i, cell) in self.cells().enumerate().filter(|(_, c)| c.digit.is_none()) {
             for digit in self.cell_candidates(i).digits() {
-                if solutions.len() == limit {
-                    break;
-                }
-
                 let mut sudoku = self.clone();
 
                 sudoku.set_cell(cell.coord, digit);
@@ -74,6 +70,10 @@ impl Sudoku {
 
                 if solved && (solutions.is_empty() || solutions.iter().any(|s| s != &sudoku)) {
                     solutions.push(sudoku);
+
+                    if solutions.len() == limit {
+                        break 'outer;
+                    }
                 }
             }
         }
