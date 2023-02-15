@@ -5,7 +5,7 @@ use rand::{seq::SliceRandom, thread_rng};
 
 use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
 
-use super::Config;
+use super::{Config, Difficulty};
 
 // TODO: tests
 // TODO: docs
@@ -17,6 +17,12 @@ impl Generate for LatinSquares {
         let filled_sudoku = Self::generate_filled_sudoku();
 
         let mut rng = thread_rng();
+        let target_filled_cells = match config.difficulty {
+            Difficulty::Easy => 36,
+            Difficulty::Medium => 30,
+            Difficulty::Hard => 25,
+            Difficulty::Expert => 22,
+        };
 
         'pick_40_random_cells: loop {
             let mut sudoku = Self::with_40_random_cells(filled_sudoku.clone());
@@ -32,10 +38,11 @@ impl Generate for LatinSquares {
                     sudoku.clear_cell(coord);
 
                     if sudoku.is_unique() {
-                        // TODO: lower number
-                        if sudoku.count_filled_cells() == 25 {
-                            // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
-                            // TODO: mark remaining cells as givens (is_given: true)
+                        // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
+                        if sudoku.count_filled_cells() == target_filled_cells {
+                            for cell in sudoku.cells_mut() {
+                                cell.is_given = true;
+                            }
                             return sudoku;
                         } else if tried_givens.len() == max_givens {
                             continue 'pick_40_random_cells;
