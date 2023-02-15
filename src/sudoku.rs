@@ -59,6 +59,7 @@ impl Sudoku {
 
         let mut solutions = Vec::with_capacity(limit);
 
+        // TODO: pre-calculate all cell candidates
         for (i, cell) in self.cells().enumerate().filter(|(_, c)| c.digit.is_none()) {
             for digit in self.cell_candidates(i).digits() {
                 if solutions.len() == limit {
