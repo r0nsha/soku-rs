@@ -15,7 +15,38 @@ impl Generate for LatinSquares {
         let mut sudoku = Self::generate_filled_sudoku();
 
         Self::swap_rows(&mut sudoku);
-        Self::keep_40_random_cells(&mut sudoku);
+
+        let mut rng = thread_rng();
+
+        let target_givens = 70;
+        while sudoku.count_filled_cells() > target_givens {
+            let coord = Coord::random(&mut rng);
+            let digit = sudoku.cell(coord).unwrap().digit;
+
+            if let Some(digit) = digit {
+                sudoku.clear_cell(coord);
+
+                if !sudoku.is_unique() {
+                    dbg!(
+                        "whoops",
+                        sudoku.count_filled_cells(),
+                        sudoku.count_solutions(2)
+                    );
+                    sudoku.set_cell(coord, digit);
+                }
+            }
+        }
+
+        dbg!(
+            sudoku.is_unique(),
+            sudoku.count_solutions(100),
+            sudoku.count_filled_cells(),
+            sudoku.is_valid()
+        );
+
+        println!("{sudoku}");
+
+        // Self::keep_40_random_cells(&mut sudoku);
         // TODO: uniqueness check (count solutions)
         // dbg!(sudoku.count_solutions(2));
         // TODO: mark remaining cells as givens (is_given: true)
@@ -118,12 +149,9 @@ impl LatinSquares {
         let mut removed = 0;
 
         while removed < TO_REMOVE {
-            let random_row = rng.gen_range(DIGIT_INDICES);
-            let random_col = rng.gen_range(DIGIT_INDICES);
+            let random_coord = Coord::random(&mut rng);
 
-            let cell = sudoku
-                .cell_mut(Coord(random_row, random_col))
-                .expect("cell to exist");
+            let cell = sudoku.cell_mut(random_coord).expect("cell to exist");
 
             if cell.digit.is_some() {
                 cell.digit = None;

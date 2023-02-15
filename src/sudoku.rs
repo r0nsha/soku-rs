@@ -8,6 +8,7 @@ use std::{
 use bitflags::bitflags;
 use derive_more::{Deref, Display};
 use itertools::Itertools;
+use rand::Rng;
 use thiserror::Error;
 
 use crate::prelude::{
@@ -51,6 +52,10 @@ impl Sudoku {
                     .digits()
                     .map(|digit| (cell.coord, digit)),
             )
+        }
+
+        if all_candidates.is_empty() {
+            return 1;
         }
 
         let limit = limit.clamp(0, all_candidates.len());
@@ -491,6 +496,14 @@ impl From<Digit> for CandidatesInner {
 pub struct Coord(pub usize, pub usize);
 
 impl Coord {
+    #[inline]
+    #[must_use]
+    pub fn random(rng: &mut impl Rng) -> Self {
+        let random_row = rng.gen_range(DIGIT_INDICES);
+        let random_col = rng.gen_range(DIGIT_INDICES);
+        Self(random_row, random_col)
+    }
+
     #[inline]
     #[must_use]
     pub const fn from_index(index: usize) -> Self {
