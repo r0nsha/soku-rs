@@ -11,8 +11,8 @@ use itertools::Itertools;
 use thiserror::Error;
 
 use crate::prelude::{
-    BruteForceSolver, Constraint, Generate, LatinSquares, Solution, Solve, DIGITS, DIGIT_INDICES,
-    GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
+    BruteForceSolver, Generate, LatinSquares, Solution, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
+    HOUSE_SIZE, SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -42,27 +42,29 @@ impl Sudoku {
     }
 
     pub fn count_solutions(&self, limit: usize) -> usize {
-        // TODO: instead of constraining the solver, we should put the candidate in the board
-        // before solving it?
         let mut solution_count = 0usize;
-        let mut constraints = Vec::<Constraint>::new();
+        let mut all_candidates = Vec::<(Coord, Digit)>::new();
 
         for (i, cell) in self.cells().enumerate().filter(|(_, c)| c.digit.is_none()) {
-            let candidates = self.cell_candidates(i);
-            constraints.extend(
-                candidates
+            all_candidates.extend(
+                self.cell_candidates(i)
                     .digits()
-                    .map(|digit| Constraint(cell.coord, digit)),
+                    .map(|digit| (cell.coord, digit)),
             )
         }
 
-        let limit = limit.clamp(0, constraints.len());
+        let limit = limit.clamp(0, all_candidates.len());
         let mut i = 0;
 
         while solution_count < limit {
-            let solution = self.clone().solve_with(BruteForceSolver {
-                constraint: constraints.get(i).copied(),
-            });
+            let mut sudoku = self.clone();
+
+            if let Some(constraint) = all_candidates.get(i).copied() {
+                sudoku.set_cell(constraint.0, constraint.1);
+            }
+
+            let solution = sudoku.solve_with(BruteForceSolver);
+
             solution_count += solution.count();
             i += 1;
         }
@@ -111,6 +113,11 @@ impl Sudoku {
         let mut cell = self.cell_mut(i.into_index())?;
         cell.digit = Some(digit);
         Some(cell)
+    }
+
+    pub fn with_cell<I: SudokuIndex>(mut self, i: I, digit: Digit) -> Self {
+        self.set_cell(i, digit);
+        self
     }
 
     pub fn clear_cell<I: SudokuIndex>(&mut self, i: I) -> Option<&mut Cell> {
