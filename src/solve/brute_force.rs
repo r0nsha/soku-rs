@@ -13,7 +13,8 @@ pub struct BruteForceSolver;
 
 impl Solve for BruteForceSolver {
     fn solve(self, sudoku: &mut Sudoku) -> bool {
-        measure!("Solver", { Self::solve_inner(sudoku) })
+        Self::solve_inner(sudoku)
+        // measure!("Solver", { Self::solve_inner(sudoku) })
     }
 }
 

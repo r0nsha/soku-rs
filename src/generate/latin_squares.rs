@@ -1,7 +1,7 @@
 use std::{collections::HashSet, fmt::Display};
 
 use derive_more::{Deref, DerefMut};
-use rand::{seq::SliceRandom, thread_rng};
+use rand::{seq::SliceRandom, thread_rng, Rng};
 
 use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
 
@@ -27,36 +27,43 @@ impl Generate for LatinSquares {
         'pick_40_random_cells: loop {
             let mut sudoku = Self::with_40_random_cells(filled_sudoku.clone());
 
-            let max_givens = sudoku.count_unfilled_cells();
-            let mut tried_givens = HashSet::new();
+            let mut given_coords = sudoku
+                .cells()
+                .enumerate()
+                .filter(|(_, cell)| cell.digit.is_some())
+                .map(|(i, _)| Coord::from_index(i))
+                .collect::<Vec<Coord>>();
+
             let mut loops = 0;
 
             'remove_givens: loop {
                 loops += 1;
-                let coord = Coord::random(&mut rng);
 
-                if let Some(digit) = sudoku.cell(coord).unwrap().digit {
-                    tried_givens.insert(coord);
-                    sudoku.clear_cell(coord);
+                if given_coords.is_empty() {
+                    continue 'pick_40_random_cells;
+                }
 
-                    if sudoku.is_unique() {
-                        // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
-                        if sudoku.count_filled_cells() == target_filled_cells {
-                            for cell in sudoku.cells_mut() {
-                                cell.is_given = true;
-                            }
-                            println!("Generation took {loops} loops");
-                            return sudoku;
-                        } else if tried_givens.len() >= max_givens {
-                            continue 'pick_40_random_cells;
-                        } else {
-                            continue 'remove_givens;
+                let random_index = rng.gen_range(0..given_coords.len());
+                let coord = given_coords[random_index];
+                given_coords.swap_remove(random_index);
+
+                let digit = sudoku.cell(coord).unwrap().digit.unwrap();
+
+                sudoku.clear_cell(coord);
+
+                if sudoku.is_unique() {
+                    // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
+                    if sudoku.count_filled_cells() == target_filled_cells {
+                        for cell in sudoku.cells_mut() {
+                            cell.is_given = true;
                         }
-                    } else if tried_givens.len() >= max_givens {
-                        continue 'pick_40_random_cells;
+                        println!("Generation took {loops} loops");
+                        return sudoku;
                     } else {
-                        sudoku.set_cell(coord, digit);
+                        continue 'remove_givens;
                     }
+                } else {
+                    sudoku.set_cell(coord, digit);
                 }
             }
         }
