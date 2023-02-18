@@ -29,8 +29,10 @@ impl Generate for LatinSquares {
 
             let max_givens = sudoku.count_unfilled_cells();
             let mut tried_givens = HashSet::new();
+            let mut loops = 0;
 
             'remove_givens: loop {
+                loops += 1;
                 let coord = Coord::random(&mut rng);
 
                 if let Some(digit) = sudoku.cell(coord).unwrap().digit {
@@ -43,6 +45,7 @@ impl Generate for LatinSquares {
                             for cell in sudoku.cells_mut() {
                                 cell.is_given = true;
                             }
+                            println!("Generation took {loops} loops");
                             return sudoku;
                         } else if tried_givens.len() >= max_givens {
                             continue 'pick_40_random_cells;

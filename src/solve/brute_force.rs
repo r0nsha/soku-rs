@@ -1,4 +1,7 @@
-use crate::prelude::{Candidates, Sudoku};
+use crate::{
+    measure,
+    prelude::{Candidates, Sudoku},
+};
 
 use super::Solve;
 
@@ -10,7 +13,7 @@ pub struct BruteForceSolver;
 
 impl Solve for BruteForceSolver {
     fn solve(self, sudoku: &mut Sudoku) -> bool {
-        Self::solve_inner(sudoku)
+        measure!("Solver", { Self::solve_inner(sudoku) })
     }
 }
 
