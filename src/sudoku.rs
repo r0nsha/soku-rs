@@ -286,6 +286,12 @@ impl Sudoku {
         candidates
     }
 
+    pub fn fill_all_cell_candidates(&mut self) {
+        for i in 0..self.0.len() {
+            self.cell_mut(i).unwrap().candidates = self.cell_candidates(i);
+        }
+    }
+
     #[must_use]
     pub fn is_valid(&self) -> bool {
         fn house_is_unique<'a>(house_iter: impl Iterator<Item = &'a Cell>) -> bool {
@@ -380,7 +386,7 @@ pub struct Cell {
     pub(crate) coord: Coord,
     pub(crate) digit: Option<Digit>,
     pub(crate) is_given: bool,
-    // pub(crate) candidates: Candidates,
+    pub(crate) candidates: Candidates,
 }
 
 #[derive(Debug, Display, Default, Deref, PartialEq, Eq, Hash, Clone, Copy)]
