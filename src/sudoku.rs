@@ -462,7 +462,6 @@ impl TryFrom<u8> for Digit {
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Candidates(CandidatesInner);
 
-// TODO: try bitvec?
 impl Candidates {
     #[must_use]
     pub const fn empty() -> Self {
