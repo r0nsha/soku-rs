@@ -1,6 +1,6 @@
 use crate::{
     measure,
-    prelude::{Candidates, Coord, Sudoku},
+    prelude::{Candidates, Sudoku},
 };
 
 use super::Solve;
@@ -53,7 +53,7 @@ impl BruteForceSolver {
                 result = Some((i, candidates));
 
                 if best_candidates_count <= 1 {
-                    break;
+                    return result;
                 }
             }
         }

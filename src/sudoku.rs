@@ -246,7 +246,7 @@ impl Sudoku {
         )
     }
 
-    const fn square_indices(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
+    pub const fn square_indices(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
         let square_row = row * HOUSE_SIZE * SQUARE_SIZE;
         let square_col = col * SQUARE_SIZE;
 
@@ -267,7 +267,7 @@ impl Sudoku {
         ]
     }
 
-    const fn square_indices_of_cell(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
+    pub const fn square_indices_of_cell(Coord(row, col): Coord) -> [usize; HOUSE_SIZE] {
         Self::square_indices(Coord(row / SQUARE_SIZE, col / SQUARE_SIZE))
     }
 
@@ -424,7 +424,7 @@ pub struct Cell {
     pub(crate) coord: Coord,
     pub(crate) digit: Option<Digit>,
     pub(crate) is_given: bool,
-    // pub(crate) candidates: Candidates,
+    pub(crate) candidates: Candidates,
 }
 
 #[derive(Debug, Display, Default, Deref, PartialEq, Eq, Hash, Clone, Copy)]
@@ -507,6 +507,14 @@ impl Candidates {
 impl Default for Candidates {
     fn default() -> Self {
         Self(CandidatesInner::empty())
+    }
+}
+
+impl From<Digit> for Candidates {
+    fn from(value: Digit) -> Self {
+        let mut candidates = Self::empty();
+        candidates.add(value);
+        candidates
     }
 }
 
