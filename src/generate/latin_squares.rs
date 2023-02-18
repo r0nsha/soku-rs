@@ -17,6 +17,7 @@ impl Generate for LatinSquares {
         let filled_sudoku = Self::generate_filled_sudoku();
 
         let mut rng = thread_rng();
+
         let target_filled_cells = match config.difficulty {
             Difficulty::Easy => 36,
             Difficulty::Medium => 30,
@@ -25,7 +26,7 @@ impl Generate for LatinSquares {
         };
 
         'pick_40_random_cells: loop {
-            let mut sudoku = Self::with_40_random_cells(filled_sudoku.clone());
+            let mut sudoku = Self::with_40_random_cells(filled_sudoku.clone(), &mut rng);
 
             let mut given_coords = sudoku
                 .cells()
@@ -159,15 +160,14 @@ impl LatinSquares {
         inner(sudoku, 5, 7);
     }
 
-    fn with_40_random_cells(sudoku: Sudoku) -> Sudoku {
-        fn inner(mut sudoku: Sudoku) -> Sudoku {
+    fn with_40_random_cells(sudoku: Sudoku, rng: &mut impl Rng) -> Sudoku {
+        fn inner(mut sudoku: Sudoku, rng: &mut impl Rng) -> Sudoku {
             const TO_REMOVE: usize = 40;
 
-            let mut rng = thread_rng();
             let mut removed = 0;
 
             while removed < TO_REMOVE {
-                let random_coord = Coord::random(&mut rng);
+                let random_coord = Coord::random(rng);
 
                 let cell = sudoku.cell_mut(random_coord).expect("cell to exist");
 
@@ -181,7 +181,7 @@ impl LatinSquares {
         }
 
         loop {
-            let sudoku = inner(sudoku.clone());
+            let sudoku = inner(sudoku.clone(), rng);
 
             if sudoku.is_unique() {
                 break sudoku;
