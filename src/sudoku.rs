@@ -424,7 +424,7 @@ pub struct Cell {
     pub(crate) coord: Coord,
     pub(crate) digit: Option<Digit>,
     pub(crate) is_given: bool,
-    pub(crate) candidates: Candidates,
+    // pub(crate) candidates: Candidates,
 }
 
 #[derive(Debug, Display, Default, Deref, PartialEq, Eq, Hash, Clone, Copy)]
