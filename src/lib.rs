@@ -15,6 +15,7 @@ mod consts;
 mod generate;
 mod solve;
 mod sudoku;
+mod macros;
 
 pub mod prelude {
     pub use crate::consts::*;
