@@ -33,6 +33,12 @@ impl Sudoku {
         Self::new_with_generator(LatinSquares, config)
     }
 
+    #[inline]
+    #[must_use]
+    pub const fn size(&self) -> usize {
+        self.0.len()
+    }
+
     #[must_use]
     pub fn new_with_generator(generator: impl Generate, config: Config) -> Self {
         generator.generate(config)
@@ -185,11 +191,7 @@ impl Sudoku {
 
     #[must_use]
     pub fn cols(&self) -> Vec<impl Iterator<Item = &'_ Cell>> {
-        DIGIT_INDICES
-            .collect::<Vec<usize>>()
-            .iter()
-            .map(|&i| self.col(i))
-            .collect()
+        DIGIT_INDICES.map(|i| self.col(i)).collect()
     }
 
     pub fn square<I: SudokuIndex>(&self, i: I) -> impl Iterator<Item = &'_ Cell> {
@@ -464,11 +466,13 @@ pub struct Candidates(CandidatesInner);
 
 impl Candidates {
     #[must_use]
+    #[inline]
     pub const fn empty() -> Self {
         Self(CandidatesInner::empty())
     }
 
     #[must_use]
+    #[inline]
     pub const fn all() -> Self {
         Self(CandidatesInner::ALL)
     }

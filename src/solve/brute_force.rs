@@ -1,6 +1,6 @@
 use crate::{
     measure,
-    prelude::{Candidates, Sudoku},
+    prelude::{Candidates, Coord, Digit, Sudoku, SudokuIndex, HOUSE_INDICES},
 };
 
 use super::Solve;
@@ -13,7 +13,7 @@ pub struct BruteForceSolver;
 impl Solve for BruteForceSolver {
     fn solve(self, sudoku: &mut Sudoku) -> bool {
         // Self::solve_inner(sudoku)
-        measure!("Solver", { Self::solve_inner(sudoku) })
+        measure!("Solver", { Self::solve_inner(sudoku,) })
     }
 }
 
@@ -59,5 +59,57 @@ impl BruteForceSolver {
         }
 
         result
+    }
+
+    #[allow(dead_code)]
+    fn get_unique_candidate(
+        all_candidates: &[Candidates],
+        cell_index: usize,
+        cell_candidates: Candidates,
+    ) -> Option<Digit> {
+        let cell_coord = Coord::from_index(cell_index);
+
+        fn unique_in_house(
+            mut house_indices: impl Iterator<Item = usize>,
+            all_candidates: &[Candidates],
+            cell_index: usize,
+            digit: Digit,
+        ) -> bool {
+            !house_indices.any(|index| index != cell_index && all_candidates[index].contains(digit))
+        }
+
+        for digit in cell_candidates.digits() {
+            // Digit is unique in its row
+            if unique_in_house(
+                HOUSE_INDICES.map(|i| Coord(cell_coord.row(), i).into_index()),
+                all_candidates,
+                cell_index,
+                digit,
+            ) {
+                return Some(digit);
+            }
+
+            // Digit is unique in its column
+            if unique_in_house(
+                HOUSE_INDICES.map(|i| Coord(i, cell_coord.col()).into_index()),
+                all_candidates,
+                cell_index,
+                digit,
+            ) {
+                return Some(digit);
+            }
+
+            // Digit is unique in its square
+            if unique_in_house(
+                Sudoku::square_indices_of_cell(cell_coord).iter().copied(),
+                all_candidates,
+                cell_index,
+                digit,
+            ) {
+                return Some(digit);
+            }
+        }
+
+        None
     }
 }
