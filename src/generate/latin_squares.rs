@@ -25,7 +25,7 @@ impl Generate for LatinSquares {
             Difficulty::Expert => 23,
         };
 
-        'pick_40_random_cells: loop {
+        loop {
             let mut sudoku = Self::with_40_random_cells(filled_sudoku.clone(), &mut rng);
 
             let mut given_coords = sudoku
@@ -35,15 +35,7 @@ impl Generate for LatinSquares {
                 .map(|(i, _)| Coord::from_index(i))
                 .collect::<Vec<Coord>>();
 
-            let mut loops = 0;
-
-            'remove_givens: loop {
-                loops += 1;
-
-                if given_coords.is_empty() {
-                    continue 'pick_40_random_cells;
-                }
-
+            while !given_coords.is_empty() {
                 let random_index = rng.gen_range(0..given_coords.len());
                 let coord = given_coords[random_index];
                 given_coords.swap_remove(random_index);
@@ -58,10 +50,7 @@ impl Generate for LatinSquares {
                         for cell in sudoku.cells_mut() {
                             cell.is_given = true;
                         }
-                        println!("Generation took {loops} loops");
                         return sudoku;
-                    } else {
-                        continue 'remove_givens;
                     }
                 } else {
                     sudoku.set_cell(coord, digit);
