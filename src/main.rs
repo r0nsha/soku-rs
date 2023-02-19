@@ -1,12 +1,11 @@
 use soku::{measure, prelude::*};
 
 fn main() -> SudokuResult<()> {
-    measure!("Total", {
-        let sudoku = Sudoku::new_unique(Config {
+    let sudoku = measure!("Total", {
+        Sudoku::new_unique(Config {
             difficulty: Difficulty::Hard,
-        });
-        println!("{sudoku}");
+        })
     });
-
+    println!("{sudoku}");
     Ok(())
 }
