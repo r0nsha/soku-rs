@@ -33,7 +33,7 @@ impl Generate for LatinSquares {
                 .enumerate()
                 .filter(|(_, cell)| cell.digit.is_some())
                 .map(|(i, _)| Coord::from_index(i))
-                .collect::<Vec<Coord>>();
+                .collect::<Vec<_>>();
 
             while !given_coords.is_empty() {
                 let random_index = rng.gen_range(0..given_coords.len());
