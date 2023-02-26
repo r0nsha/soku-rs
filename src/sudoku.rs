@@ -45,6 +45,11 @@ impl Sudoku {
     }
 
     #[must_use]
+    pub const fn into_inner(self) -> [Cell; GRID_SIZE] {
+        self.0
+    }
+
+    #[must_use]
     pub const fn as_slice(&self) -> &[Cell] {
         &self.0
     }
