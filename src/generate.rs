@@ -17,5 +17,20 @@ pub enum Difficulty {
     Easy,
     Medium,
     Hard,
+    VeryHard,
     Expert,
+    Insane,
+}
+
+impl Difficulty {
+    pub const fn into_cell_count(self) -> usize {
+        match self {
+            Self::Easy => 62,
+            Self::Medium => 53,
+            Self::Hard => 44,
+            Self::VeryHard => 35,
+            Self::Expert => 26,
+            Self::Insane => 17,
+        }
+    }
 }

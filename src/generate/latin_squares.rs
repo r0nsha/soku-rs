@@ -3,9 +3,9 @@ use std::fmt::Display;
 use derive_more::{Deref, DerefMut};
 use rand::{seq::SliceRandom, thread_rng, Rng};
 
-use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, SQUARE_SIZE};
+use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, GRID_SIZE, SQUARE_SIZE};
 
-use super::{Config, Difficulty};
+use super::Config;
 
 // TODO: tests
 // TODO: docs
@@ -18,15 +18,19 @@ impl Generate for LatinSquares {
 
         let mut rng = thread_rng();
 
-        let target_filled_cells = match config.difficulty {
-            Difficulty::Easy => 36,
-            Difficulty::Medium => 30,
-            Difficulty::Hard => 25,
-            Difficulty::Expert => 23,
-        };
+        let target_filled_cells = config.difficulty.into_cell_count();
+        debug_assert!((0..=81).contains(&target_filled_cells));
 
         loop {
-            let mut sudoku = Self::with_40_random_cells(filled_sudoku.clone(), &mut rng);
+            let mut sudoku = Self::with_n_random_cells(
+                filled_sudoku.clone(),
+                &mut rng,
+                target_filled_cells.clamp(GRID_SIZE / 2, GRID_SIZE),
+            );
+
+            if sudoku.count_filled_cells() == target_filled_cells && sudoku.is_unique() {
+                return sudoku;
+            }
 
             let mut given_coords = sudoku
                 .cells()
@@ -149,20 +153,18 @@ impl LatinSquares {
         inner(sudoku, 5, 7);
     }
 
-    fn with_40_random_cells(sudoku: Sudoku, rng: &mut impl Rng) -> Sudoku {
-        fn inner(mut sudoku: Sudoku, rng: &mut impl Rng) -> Sudoku {
-            const TO_REMOVE: usize = 40;
+    fn with_n_random_cells(sudoku: Sudoku, rng: &mut impl Rng, to_keep: usize) -> Sudoku {
+        fn inner(mut sudoku: Sudoku, rng: &mut impl Rng, to_keep: usize) -> Sudoku {
+            let mut cell_count = sudoku.count_filled_cells();
 
-            let mut removed = 0;
-
-            while removed < TO_REMOVE {
+            while cell_count > to_keep {
                 let random_coord = Coord::random(rng);
 
                 let cell = sudoku.cell_mut(random_coord).expect("cell to exist");
 
                 if cell.digit.is_some() {
                     cell.digit = None;
-                    removed += 1;
+                    cell_count -= 1;
                 }
             }
 
@@ -170,7 +172,7 @@ impl LatinSquares {
         }
 
         loop {
-            let sudoku = inner(sudoku.clone(), rng);
+            let sudoku = inner(sudoku.clone(), rng, to_keep);
 
             if sudoku.is_unique() {
                 break sudoku;

@@ -13,7 +13,7 @@ use thiserror::Error;
 
 use crate::prelude::{
     BruteForceSolver, Config, Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
-    HOUSE_INDICES, HOUSE_SIZE, SQUARE_SIZE,
+    HOUSE_SIZE, SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -291,46 +291,6 @@ impl Sudoku {
         candidates
     }
 
-    pub fn fill_all_cell_candidates(&mut self) {
-        for i in 0..self.0.len() {
-            self.cell_mut(i).unwrap().candidates = self.cell_candidates(i);
-        }
-    }
-
-    pub fn recalculate_row_candidates(&mut self, row: usize) {
-        // TODO: we should eliminate these two steps and only iterate the row
-        let new_candidates = HOUSE_INDICES
-            .map(|col| self.cell_candidates(Coord(row, col)))
-            .collect::<Vec<_>>();
-
-        self.row_mut(row)
-            .enumerate()
-            .for_each(|(i, cell)| cell.candidates = new_candidates[i]);
-    }
-
-    pub fn recalculate_col_candidates(&mut self, col: usize) {
-        // TODO: we should eliminate these two steps and only iterate the column
-        let new_candidates = HOUSE_INDICES
-            .map(|row| self.cell_candidates(Coord(row, col)))
-            .collect::<Vec<_>>();
-
-        self.col_mut(col)
-            .enumerate()
-            .for_each(|(i, cell)| cell.candidates = new_candidates[i]);
-    }
-
-    pub fn recalculate_square_candidates<I: SudokuIndex>(&mut self, cell_index: I) {
-        // TODO: we should be able to only iterate the square
-        let cell_index = cell_index.into_index();
-
-        let new_candidates = Self::square_indices_of_cell(Coord::from_index(cell_index))
-            .map(|index| self.cell_candidates(index));
-
-        self.square_mut_of_cell(cell_index)
-            .enumerate()
-            .for_each(|(i, cell)| cell.candidates = new_candidates[i]);
-    }
-
     #[must_use]
     pub fn is_valid(&self) -> bool {
         fn house_is_unique<'a>(house_iter: impl Iterator<Item = &'a Cell>) -> bool {
@@ -351,6 +311,20 @@ impl Sudoku {
             HOUSE_SIZE - 1,
             index
         );
+    }
+}
+
+impl From<[Cell; GRID_SIZE]> for Sudoku {
+    fn from(value: [Cell; GRID_SIZE]) -> Self {
+        Self(value)
+    }
+}
+
+impl TryFrom<Vec<Cell>> for Sudoku {
+    type Error = Vec<Cell>;
+
+    fn try_from(value: Vec<Cell>) -> Result<Self, Self::Error> {
+        Ok(Self(value.try_into()?))
     }
 }
 
@@ -425,7 +399,6 @@ pub struct Cell {
     pub(crate) coord: Coord,
     pub(crate) digit: Option<Digit>,
     pub(crate) is_given: bool,
-    pub(crate) candidates: Candidates,
 }
 
 #[derive(Debug, Display, Default, Deref, PartialEq, Eq, Hash, Clone, Copy)]
