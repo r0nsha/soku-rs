@@ -36,3 +36,19 @@ impl Difficulty {
         }
     }
 }
+
+impl TryFrom<usize> for Difficulty {
+    type Error = String;
+
+    fn try_from(value: usize) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Easy),
+            1 => Ok(Self::Medium),
+            2 => Ok(Self::Hard),
+            3 => Ok(Self::VeryHard),
+            4 => Ok(Self::Expert),
+            5 => Ok(Self::Insane),
+            n => Err(format!("got invalid difficulty index {n}")),
+        }
+    }
+}

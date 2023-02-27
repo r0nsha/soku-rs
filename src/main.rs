@@ -6,6 +6,7 @@ fn main() -> SudokuResult<()> {
             difficulty: Difficulty::Insane,
         })
     });
+
     println!("{sudoku}");
     Ok(())
 }
