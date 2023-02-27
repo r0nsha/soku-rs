@@ -14,8 +14,15 @@ pub struct LatinSquares;
 
 impl Generate for LatinSquares {
     fn generate(self, config: Config) -> Sudoku {
-        let filled_sudoku = Self::generate_filled_sudoku();
+        let filled_sudoku = Self.generate_filled(config);
+        Self.generate_from(filled_sudoku, config)
+    }
 
+    fn generate_filled(self, _config: Config) -> Sudoku {
+        Self::generate_filled_sudoku()
+    }
+
+    fn generate_from(self, filled_sudoku: Sudoku, config: Config) -> Sudoku {
         let mut rng = thread_rng();
 
         let target_filled_cells = config.difficulty.into_cell_count();
@@ -27,6 +34,8 @@ impl Generate for LatinSquares {
                 &mut rng,
                 target_filled_cells.clamp(GRID_SIZE / 2, GRID_SIZE),
             );
+
+            // let mut sudoku = filled_sudoku.clone();
 
             if sudoku.count_filled_cells() == target_filled_cells && sudoku.is_unique() {
                 return sudoku;
@@ -57,6 +66,8 @@ impl Generate for LatinSquares {
                     sudoku.set_cell(coord, digit);
                 }
             }
+
+            println!("got to {} cells", sudoku.count_filled_cells());
         }
     }
 }

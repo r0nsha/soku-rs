@@ -29,6 +29,11 @@ impl Sudoku {
     }
 
     #[must_use]
+    pub fn new_filled(config: Config) -> Self {
+        Self::new_filled_with_generator(LatinSquares, config)
+    }
+
+    #[must_use]
     pub fn new_unique(config: Config) -> Self {
         Self::new_with_generator(LatinSquares, config)
     }
@@ -42,6 +47,11 @@ impl Sudoku {
     #[must_use]
     pub fn new_with_generator(generator: impl Generate, config: Config) -> Self {
         generator.generate(config)
+    }
+
+    #[must_use]
+    pub fn new_filled_with_generator(generator: impl Generate, config: Config) -> Self {
+        generator.generate_filled(config)
     }
 
     #[must_use]
