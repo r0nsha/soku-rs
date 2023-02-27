@@ -35,8 +35,6 @@ impl Generate for LatinSquares {
                 target_filled_cells.clamp(GRID_SIZE / 2, GRID_SIZE),
             );
 
-            // let mut sudoku = filled_sudoku.clone();
-
             if sudoku.count_filled_cells() == target_filled_cells && sudoku.is_unique() {
                 return sudoku;
             }
@@ -66,8 +64,6 @@ impl Generate for LatinSquares {
                     sudoku.set_cell(coord, digit);
                 }
             }
-
-            println!("got to {} cells", sudoku.count_filled_cells());
         }
     }
 }
