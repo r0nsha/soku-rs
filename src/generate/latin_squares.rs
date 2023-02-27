@@ -39,17 +39,14 @@ impl Generate for LatinSquares {
                 .map(|(i, _)| Coord::from_index(i))
                 .collect::<Vec<_>>();
 
-            while !given_coords.is_empty() {
-                let random_index = rng.gen_range(0..given_coords.len());
-                let coord = given_coords[random_index];
-                given_coords.swap_remove(random_index);
+            given_coords.shuffle(&mut rng);
 
+            for coord in given_coords {
                 let digit = sudoku.cell(coord).unwrap().digit.unwrap();
 
                 sudoku.clear_cell(coord);
 
                 if sudoku.is_unique() {
-                    // TODO: use smarter difficulty rating: https://www.sudokuoftheday.com/difficulty
                     if sudoku.count_filled_cells() == target_filled_cells {
                         for cell in sudoku.cells_mut() {
                             cell.is_given = true;
