@@ -20,7 +20,7 @@ use crate::prelude::{
 // TODO: docs
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Sudoku(pub(crate) [Cell; GRID_SIZE]);
+pub struct Sudoku(pub [Cell; GRID_SIZE]);
 
 impl Sudoku {
     #[must_use]
@@ -411,13 +411,13 @@ pub enum ParseError {
 
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Cell {
-    pub(crate) coord: Coord,
-    pub(crate) digit: Option<Digit>,
-    pub(crate) is_given: bool,
+    pub coord: Coord,
+    pub digit: Option<Digit>,
+    pub is_given: bool,
 }
 
 #[derive(Debug, Display, Default, Deref, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct Digit(pub(crate) u8);
+pub struct Digit(pub u8);
 
 impl Digit {
     #[must_use]
