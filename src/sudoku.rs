@@ -12,8 +12,8 @@ use rand::Rng;
 use thiserror::Error;
 
 use crate::prelude::{
-    BruteForceSolver, SudokuConfig, Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
-    HOUSE_SIZE, SQUARE_SIZE,
+    BruteForceSolver, Generate, LatinSquares, Solve, SudokuConfig, DIGITS, DIGIT_INDICES,
+    GRID_SIZE, HOUSE_SIZE, SQUARE_SIZE,
 };
 
 // TODO: tests
@@ -86,7 +86,7 @@ impl Sudoku {
 
                 sudoku.set_cell(cell.coord, digit);
 
-                let solved = sudoku.solve_with(BruteForceSolver);
+                let solved = sudoku.solve_with(BruteForceSolver::new());
 
                 if solved && (solutions.is_empty() || solutions.iter().any(|s| s != &sudoku)) {
                     if solutions.len() == limit {
@@ -306,6 +306,27 @@ impl Sudoku {
         candidates
     }
 
+    pub fn all_candidates(&self) -> Vec<Candidates> {
+        self.cells()
+            .enumerate()
+            .map(|(i, cell)| {
+                if cell.digit.is_some() {
+                    Candidates::empty()
+                } else {
+                    self.cell_candidates(i)
+                }
+            })
+            .collect::<Vec<_>>()
+    }
+
+    pub fn solve_all_candidates(&mut self) {
+        let all_candidates = self.all_candidates();
+
+        self.cells_mut()
+            .enumerate()
+            .for_each(|(i, cell)| cell.candidates = all_candidates[i]);
+    }
+
     #[must_use]
     pub fn is_valid(&self) -> bool {
         fn house_is_unique<'a>(house_iter: impl Iterator<Item = &'a Cell>) -> bool {
@@ -413,6 +434,7 @@ pub enum ParseError {
 pub struct Cell {
     pub coord: Coord,
     pub digit: Option<Digit>,
+    pub candidates: Candidates,
     pub is_given: bool,
 }
 

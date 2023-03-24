@@ -7,20 +7,33 @@ use super::Solve;
 
 pub struct BruteForceSolver;
 
+impl BruteForceSolver {
+    pub const fn new() -> Self {
+        Self
+    }
+}
+
 impl Solve for BruteForceSolver {
     fn solve(self, sudoku: &mut Sudoku) -> bool {
-        Self::solve_inner(sudoku)
-        // measure!("Solver", { Self::solve_inner(sudoku,) })
+        let all_candidates = sudoku.all_candidates();
+        Self::solve_inner(sudoku, all_candidates)
+        // measure!("Solver", {
+        //     let all_candidates = sudoku.all_candidates();
+        //     Self::solve_inner(sudoku, all_candidates)
+        // })
     }
 }
 
 impl BruteForceSolver {
-    fn solve_inner(sudoku: &mut Sudoku) -> bool {
-        if let Some((index, candidates)) = Self::cell_with_least_candidates(sudoku) {
+    fn solve_inner(sudoku: &mut Sudoku, mut all_candidates: Vec<Candidates>) -> bool {
+        if let Some((index, candidates)) = Self::cell_with_least_candidates(sudoku, &all_candidates)
+        {
             for digit in candidates.digits() {
                 sudoku.set_cell(index, digit);
 
-                if Self::solve_inner(sudoku) {
+                Self::recalculate_all_candidates(&mut all_candidates, index, digit);
+
+                if Self::solve_inner(sudoku, all_candidates.clone()) {
                     return true;
                 }
             }
@@ -33,7 +46,10 @@ impl BruteForceSolver {
         }
     }
 
-    fn cell_with_least_candidates(sudoku: &Sudoku) -> Option<(usize, Candidates)> {
+    fn cell_with_least_candidates(
+        sudoku: &Sudoku,
+        all_candidates: &[Candidates],
+    ) -> Option<(usize, Candidates)> {
         let mut best_candidates_count = usize::MAX;
         let mut result = None;
 
@@ -42,7 +58,8 @@ impl BruteForceSolver {
             .enumerate()
             .filter(|(_, cell)| cell.digit.is_none())
         {
-            let candidates = sudoku.cell_candidates(i);
+            // let candidates = sudoku.cell_candidates(i);
+            let candidates = all_candidates[i];
             let candidates_count = candidates.count();
 
             if candidates_count < best_candidates_count {
@@ -58,55 +75,37 @@ impl BruteForceSolver {
         result
     }
 
-    #[allow(dead_code)]
-    fn get_unique_candidate(
-        all_candidates: &[Candidates],
-        cell_index: usize,
-        cell_candidates: Candidates,
-    ) -> Option<Digit> {
-        let cell_coord = Coord::from_index(cell_index);
+    fn recalculate_all_candidates(all_candidates: &mut [Candidates], index: usize, digit: Digit) {
+        let coord @ Coord(row, col) = Coord::from_index(index);
 
-        fn unique_in_house(
-            mut house_indices: impl Iterator<Item = usize>,
-            all_candidates: &[Candidates],
-            cell_index: usize,
-            digit: Digit,
-        ) -> bool {
-            !house_indices.any(|index| index != cell_index && all_candidates[index].contains(digit))
-        }
-
-        for digit in cell_candidates.digits() {
-            // Digit is unique in its row
-            if unique_in_house(
-                HOUSE_INDICES.map(|i| Coord(cell_coord.row(), i).into_index()),
-                all_candidates,
-                cell_index,
-                digit,
-            ) {
-                return Some(digit);
-            }
-
-            // Digit is unique in its column
-            if unique_in_house(
-                HOUSE_INDICES.map(|i| Coord(i, cell_coord.col()).into_index()),
-                all_candidates,
-                cell_index,
-                digit,
-            ) {
-                return Some(digit);
-            }
-
-            // Digit is unique in its square
-            if unique_in_house(
-                Sudoku::square_indices_of_cell(cell_coord).iter().copied(),
-                all_candidates,
-                cell_index,
-                digit,
-            ) {
-                return Some(digit);
+        // Remove digit from column
+        for r in HOUSE_INDICES {
+            if r != row {
+                let index = Coord(r, col).into_index();
+                all_candidates[index].remove(digit);
             }
         }
 
-        None
+        // Remove digit from column
+        for c in HOUSE_INDICES {
+            if c != col {
+                let index = Coord(row, c).into_index();
+                all_candidates[index].remove(digit);
+            }
+        }
+
+        for i in Sudoku::square_indices_of_cell(coord) {
+            if i != index {
+                all_candidates[i].remove(digit);
+            }
+        }
+
+        // let square_row = row / SQUARE_SIZE;
+        // let square_col = col / SQUARE_SIZE;
+        //
+        //
+        // for r in square_row..square_row + 3 {
+        //     for c in square_col..square_col
+        // }
     }
 }

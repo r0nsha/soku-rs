@@ -28,17 +28,17 @@ impl Generate for LatinSquares {
         let target_cells = config.cells;
         debug_assert!((0..=81).contains(&target_cells));
 
+        let mut sudoku = Self::with_n_random_cells(
+            filled_sudoku,
+            &mut rng,
+            target_cells.clamp(GRID_SIZE / 2, GRID_SIZE),
+        );
+
+        if sudoku.count_filled_cells() == target_cells && sudoku.is_unique() {
+            return sudoku;
+        }
+
         loop {
-            let mut sudoku = Self::with_n_random_cells(
-                filled_sudoku.clone(),
-                &mut rng,
-                target_cells.clamp(GRID_SIZE / 2, GRID_SIZE),
-            );
-
-            if sudoku.count_filled_cells() == target_cells && sudoku.is_unique() {
-                return sudoku;
-            }
-
             let mut given_coords = sudoku
                 .cells()
                 .enumerate()
@@ -48,19 +48,25 @@ impl Generate for LatinSquares {
 
             given_coords.shuffle(&mut rng);
 
+            // println!("given_coords: {}", given_coords.len());
+            // println!("{given_coords:?}");
+
             for coord in given_coords {
                 let digit = sudoku.cell(coord).unwrap().digit.unwrap();
 
                 sudoku.clear_cell(coord);
 
                 if sudoku.is_unique() {
+                    // println!("unique");
                     if sudoku.count_filled_cells() == target_cells {
+                        // println!("done");
                         for cell in sudoku.cells_mut() {
                             cell.is_given = true;
                         }
                         return sudoku;
                     }
                 } else {
+                    // println!("not unique");
                     sudoku.set_cell(coord, digit);
                 }
             }
