@@ -5,7 +5,6 @@
     clippy::complexity,
     clippy::perf,
     clippy::style,
-    // clippy::pedantic,
     clippy::nursery,
     clippy::cargo
 )]

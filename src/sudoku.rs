@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     fmt::{Display, Write},
     hash::Hash,
     slice::Chunks,
@@ -7,7 +8,6 @@ use std::{
 
 use bitflags::bitflags;
 use derive_more::{Deref, Display};
-use itertools::Itertools;
 use rand::Rng;
 use thiserror::Error;
 
@@ -330,7 +330,10 @@ impl Sudoku {
     #[must_use]
     pub fn is_valid(&self) -> bool {
         fn house_is_unique<'a>(house_iter: impl Iterator<Item = &'a Cell>) -> bool {
-            house_iter.filter(|cell| cell.digit.is_some()).all_unique()
+            let mut used = HashSet::new();
+            house_iter
+                .filter(|cell| cell.digit.is_some())
+                .all(move |cell| used.insert(cell))
         }
 
         self.rows().all(|row| house_is_unique(row.iter()))
