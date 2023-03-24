@@ -351,6 +351,12 @@ impl Sudoku {
             index
         );
     }
+
+    pub fn to_str_line(&self) -> String {
+        self.cells()
+            .map(|cell| cell.digit.map_or('0', |d| char::from_digit((*d).into(), 10).unwrap()))
+            .collect::<String>()
+    }
 }
 
 impl From<[Cell; GRID_SIZE]> for Sudoku {
