@@ -99,13 +99,5 @@ impl BruteForceSolver {
                 all_candidates[i].remove(digit);
             }
         }
-
-        // let square_row = row / SQUARE_SIZE;
-        // let square_col = col / SQUARE_SIZE;
-        //
-        //
-        // for r in square_row..square_row + 3 {
-        //     for c in square_col..square_col
-        // }
     }
 }
