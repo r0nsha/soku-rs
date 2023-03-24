@@ -1,4 +1,4 @@
-use crate::prelude::{Candidates, Coord, Digit, Sudoku, SudokuIndex, HOUSE_INDICES};
+use crate::{prelude::{Candidates, Coord, Digit, Sudoku, SudokuIndex, HOUSE_INDICES}, measure};
 
 use super::Solve;
 
