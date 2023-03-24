@@ -25,17 +25,17 @@ impl Generate for LatinSquares {
     fn generate_from(self, filled_sudoku: Sudoku, config: Config) -> Sudoku {
         let mut rng = thread_rng();
 
-        let target_filled_cells = config.difficulty.into_cell_count();
-        debug_assert!((0..=81).contains(&target_filled_cells));
+        let target_cells = config.cells;
+        debug_assert!((0..=81).contains(&target_cells));
 
         loop {
             let mut sudoku = Self::with_n_random_cells(
                 filled_sudoku.clone(),
                 &mut rng,
-                target_filled_cells.clamp(GRID_SIZE / 2, GRID_SIZE),
+                target_cells.clamp(GRID_SIZE / 2, GRID_SIZE),
             );
 
-            if sudoku.count_filled_cells() == target_filled_cells && sudoku.is_unique() {
+            if sudoku.count_filled_cells() == target_cells && sudoku.is_unique() {
                 return sudoku;
             }
 
@@ -54,7 +54,7 @@ impl Generate for LatinSquares {
                 sudoku.clear_cell(coord);
 
                 if sudoku.is_unique() {
-                    if sudoku.count_filled_cells() == target_filled_cells {
+                    if sudoku.count_filled_cells() == target_cells {
                         for cell in sudoku.cells_mut() {
                             cell.is_given = true;
                         }
