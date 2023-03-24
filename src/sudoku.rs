@@ -12,7 +12,7 @@ use rand::Rng;
 use thiserror::Error;
 
 use crate::prelude::{
-    BruteForceSolver, Config, Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
+    BruteForceSolver, SudokuConfig, Generate, LatinSquares, Solve, DIGITS, DIGIT_INDICES, GRID_SIZE,
     HOUSE_SIZE, SQUARE_SIZE,
 };
 
@@ -29,12 +29,12 @@ impl Sudoku {
     }
 
     #[must_use]
-    pub fn new_filled(config: Config) -> Self {
+    pub fn new_filled(config: SudokuConfig) -> Self {
         Self::new_filled_with_generator(LatinSquares, config)
     }
 
     #[must_use]
-    pub fn new_unique(config: Config) -> Self {
+    pub fn new_unique(config: SudokuConfig) -> Self {
         Self::new_with_generator(LatinSquares, config)
     }
 
@@ -45,12 +45,12 @@ impl Sudoku {
     }
 
     #[must_use]
-    pub fn new_with_generator(generator: impl Generate, config: Config) -> Self {
+    pub fn new_with_generator(generator: impl Generate, config: SudokuConfig) -> Self {
         generator.generate(config)
     }
 
     #[must_use]
-    pub fn new_filled_with_generator(generator: impl Generate, config: Config) -> Self {
+    pub fn new_filled_with_generator(generator: impl Generate, config: SudokuConfig) -> Self {
         generator.generate_filled(config)
     }
 

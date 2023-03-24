@@ -5,7 +5,7 @@ use rand::{seq::SliceRandom, thread_rng, Rng};
 
 use crate::prelude::{Coord, Digit, Generate, Sudoku, DIGIT_INDICES, GRID_SIZE, SQUARE_SIZE};
 
-use super::Config;
+use super::SudokuConfig;
 
 // TODO: tests
 // TODO: docs
@@ -13,16 +13,16 @@ use super::Config;
 pub struct LatinSquares;
 
 impl Generate for LatinSquares {
-    fn generate(self, config: Config) -> Sudoku {
+    fn generate(self, config: SudokuConfig) -> Sudoku {
         let filled_sudoku = Self.generate_filled(config);
         Self.generate_from(filled_sudoku, config)
     }
 
-    fn generate_filled(self, _config: Config) -> Sudoku {
+    fn generate_filled(self, _config: SudokuConfig) -> Sudoku {
         Self::generate_filled_sudoku()
     }
 
-    fn generate_from(self, filled_sudoku: Sudoku, config: Config) -> Sudoku {
+    fn generate_from(self, filled_sudoku: Sudoku, config: SudokuConfig) -> Sudoku {
         let mut rng = thread_rng();
 
         let target_cells = config.cells;
