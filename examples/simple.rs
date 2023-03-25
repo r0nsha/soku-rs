@@ -1,7 +1,9 @@
-use soku::prelude::*;
+use soku::{measure, prelude::*};
 
 fn main() -> SudokuResult<()> {
-    let sudoku = Sudoku::new_unique(SudokuConfig { cells: 23 });
+    let sudoku = measure!("Generation", {
+        Sudoku::new_unique(SudokuConfig { cells: 23 })
+    });
     println!("{sudoku}");
     Ok(())
 }

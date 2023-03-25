@@ -17,10 +17,6 @@ impl Solve for BruteForceSolver {
     fn solve(self, sudoku: &mut Sudoku) -> bool {
         let all_candidates = sudoku.all_candidates();
         Self::solve_inner(sudoku, all_candidates)
-        // measure!("Solver", {
-        //     let all_candidates = sudoku.all_candidates();
-        //     Self::solve_inner(sudoku, all_candidates)
-        // })
     }
 }
 
@@ -58,7 +54,6 @@ impl BruteForceSolver {
             .enumerate()
             .filter(|(_, cell)| cell.digit.is_none())
         {
-            // let candidates = sudoku.cell_candidates(i);
             let candidates = all_candidates[i];
             let candidates_count = candidates.count();
 

@@ -3,7 +3,6 @@ use std::{
     fmt::{Display, Write},
     hash::Hash,
     slice::Chunks,
-    str::FromStr,
 };
 
 use bitflags::bitflags;
@@ -354,8 +353,30 @@ impl Sudoku {
 
     pub fn to_str_line(&self) -> String {
         self.cells()
-            .map(|cell| cell.digit.map_or('0', |d| char::from_digit((*d).into(), 10).unwrap()))
+            .map(|cell| {
+                cell.digit
+                    .map_or('0', |d| char::from_digit((*d).into(), 10).unwrap())
+            })
             .collect::<String>()
+    }
+
+    pub fn from_str_line(s: &str) -> Self {
+        Self::try_from(
+            s.chars()
+                .enumerate()
+                .map(|(i, c)| Cell {
+                    coord: Coord::from_index(i),
+                    digit: if c == '0' {
+                        None
+                    } else {
+                        Some(Digit::new(c.to_digit(10).unwrap().try_into().unwrap()).unwrap())
+                    },
+                    candidates: Candidates::empty(),
+                    is_given: c != '0',
+                })
+                .collect::<Vec<_>>(),
+        )
+        .unwrap()
     }
 }
 
@@ -417,19 +438,6 @@ impl Display for Sudoku {
         f.write_str("'-----'-----'-----'")?;
 
         Ok(())
-    }
-}
-
-// TODO: from_str
-impl FromStr for Sudoku {
-    type Err = ParseError;
-
-    fn from_str(_s: &str) -> Result<Self, Self::Err> {
-        todo!()
-        // Err(ParseError::InvalidChar {
-        //     char: 'F',
-        //     index: 0,
-        // })
     }
 }
 
