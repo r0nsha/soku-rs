@@ -9,7 +9,7 @@ use soku::{measure, prelude::*};
 
 static PROGRESS: AtomicUsize = AtomicUsize::new(0);
 const TOTAL: usize = 1000;
-const CELLS: usize = 20;
+const CELLS: usize = 17;
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() {
