@@ -13,3 +13,7 @@ Cargo.lock
 # Added by cargo
 
 /target
+
+# Internal
+sudokus.txt
+sudokus.json
