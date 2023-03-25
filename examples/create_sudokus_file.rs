@@ -9,9 +9,9 @@ use soku::{measure, prelude::*};
 
 static PROGRESS: AtomicUsize = AtomicUsize::new(0);
 const TOTAL: usize = 1000;
-const CELLS: usize = 17;
+const CELLS: usize = 20;
 
-#[tokio::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() {
     measure!("Generate sudokus file", {
         let futures = (0..TOTAL)
