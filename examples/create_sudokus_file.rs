@@ -8,15 +8,16 @@ use futures::{future, stream::FuturesUnordered};
 use soku::{measure, prelude::*};
 
 static PROGRESS: AtomicUsize = AtomicUsize::new(0);
-const TOTAL: usize = 500;
+const TOTAL: usize = 1000;
+const CELLS: usize = 17;
 
 #[tokio::main]
 async fn main() {
-    measure!("Generate 500 seconds", {
+    measure!("Generate sudokus file", {
         let futures = (0..TOTAL)
             .map(|_| {
                 tokio::spawn(async {
-                    let result = Sudoku::new_unique(SudokuConfig { cells: 20 }).to_str_line();
+                    let result = Sudoku::new_unique(SudokuConfig { cells: CELLS }).to_str_line();
                     PROGRESS.fetch_add(1, Ordering::Relaxed);
                     println!("progress: {PROGRESS:?}/{TOTAL}");
                     result
